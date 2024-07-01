@@ -1,6 +1,8 @@
 # flutter_screenguard
 
-A new Flutter plugin project.
+A Native screenshot blocking library for Flutter developer, with background customizable after captured. Screenshot detector are also supported.
+
+(Take inspiration from my own react-native-screenguard library)
 
 ## Getting Started
 

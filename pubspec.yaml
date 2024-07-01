@@ -1,7 +1,7 @@
 name: flutter_screenguard
-description: "A new Flutter plugin project."
+description: "A Native screenshot blocking library for Flutter developer, with background customizable after captured. Screenshot detector are also supported."
 version: 0.0.1
-homepage:
+homepage: 
 
 environment:
   sdk: '>=3.4.1 <4.0.0'

@@ -10,8 +10,7 @@ class MethodChannelFlutterScreenguard extends FlutterScreenguardPlatform {
   final methodChannel = const MethodChannel('flutter_screenguard');
 
   @override
-  Future<String?> getPlatformVersion() async {
-    final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
-    return version;
+  Future<void> register() async {
+    await methodChannel.invokeMethod<String>('register', );
   }
 }

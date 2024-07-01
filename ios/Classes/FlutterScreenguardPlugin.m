@@ -5,6 +5,11 @@ UITextField *textField;
 UIImageView *imageView;
 UIScrollView *scrollView;
 
+static NSString * const SCREENSHOT_EVT = @"onScreenShotCaptured";
+static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
+
+
+
 @implementation FlutterScreenguardPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   FlutterMethodChannel* channel = [FlutterMethodChannel
@@ -12,29 +17,39 @@ UIScrollView *scrollView;
             binaryMessenger:[registrar messenger]];
   FlutterScreenguardPlugin* instance = [[FlutterScreenguardPlugin alloc] init];
   [registrar addMethodCallDelegate:instance channel:channel];
+  FlutterEventChannel* eventChannel = [FlutterEventChannel
+                                             eventChannelWithName:@"module_xxxx/events"
+                                             binaryMessenger:[registrar messenger]];
+  [eventChannel setStreamHandler:instance];
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  switch (call.method) {
-    case @"register":
-    result([]); 
-    break;
-    case @"registerWithBlurView":
-    result([]); 
-    break;
-    case @"registerWithImage":
-    result([]); 
-    break;
-    case @"registerWithoutEffect"://Android only
-    result([]); 
-    break;
-    case @"registerScreenshotEventListener":
-    result([]); 
-    break;
-    case @"registerScreenRecordingEventListener":
-    result([]); 
-    break;
-
+  if ([@"register" isEqualToString:call.method]) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+            [self secureViewWithBackgroundColor: @"#FAFAFA"];
+      });
+      result(@{@"status": @"success"});
+  } else if ([@"registerWithBlurView" isEqualToString:call.method]) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+            [self secureViewWithBlurView: @35];
+      });
+      result(@{@"status": @"success"});
+  } else if ([@"registerWithImage" isEqualToString:call.method]) {
+//       dispatch_async(dispatch_get_main_queue(), ^{
+//             [self secureViewWithImage: withDefaultSource:<#(nullable NSDictionary *)#> withWidth:<#(nonnull NSNumber *)#> withHeight:<#(nonnull NSNumber *)#> withAlignment:<#(ScreenGuardImageAlignment)#> withBackgroundColor:<#(nonnull NSString *)#>: @"#FAFAFA"];
+//       });
+      result(@{@"status": @"success"});
+  } else if ([@"registerScreenshotEventListener" isEqualToString: call.method]) {
+      //TODO get params
+      dispatch_async(dispatch_get_main_queue(), ^{
+          [self registerScreenShotEventListener: true];
+      });
+      result(@{@"status": @"success"});
+  } else if ([@"registerScreenRecordingEventListener" isEqualToString: call.method]) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+            [self secureViewWithBackgroundColor: @"#FAFAFA"];
+      });
+      result(@{@"status": @"success"});
   }
 }
 
@@ -42,12 +57,51 @@ UIScrollView *scrollView;
   return @[SCREENSHOT_EVT, SCREEN_RECORDING_EVT];
 }
 
-- (void)startObserving {
-  hasListeners = YES;
+- (void) registerScreenShotEventListener: (BOOL) getScreenShotPath {
+  NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+  NSOperationQueue *mainQueue = [NSOperationQueue mainQueue];
+  [center removeObserver:self
+                    name:UIApplicationUserDidTakeScreenshotNotification
+                  object:nil];
+  [center addObserverForName:UIApplicationUserDidTakeScreenshotNotification
+                      object:nil
+                       queue:mainQueue
+                  usingBlock:^(NSNotification *notification) {
+    
+    if (getScreenShotPath) {
+      UIViewController *rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;
+      UIViewController *presentedViewController = [self topViewController:rootViewController];
+      UIImage *image = [self convertViewToImage:presentedViewController.view.superview];
+      NSData *data = UIImagePNGRepresentation(image);
+      if (!data) {
+          [self emit:SCREENSHOT_EVT body: nil];
+        // reject(@"error", @"Failed to convert image to PNG", nil);
+        return;
+      }
+
+      NSString *tempDir = NSTemporaryDirectory();
+      NSString *fileName = [[NSUUID UUID] UUIDString];
+      NSString *filePath = [tempDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.png", fileName]];
+
+      NSError *error = nil;
+      NSDictionary *result;
+      BOOL success = [data writeToFile:filePath options:NSDataWritingAtomic error:&error];
+      if (!success) {
+          result = @{@"path": @"Error retrieving file", @"name": @"", @"type": @""};
+      } else {
+        result = @{@"path": filePath, @"name": fileName, @"type": @"PNG"};
+      }
+      [self emit:SCREENSHOT_EVT body: result];
+    } else {
+      [self emit:SCREENSHOT_EVT body: nil];
+    }
+  }];
 }
 
-- (void)stopObserving {
-  hasListeners = NO;
+- (void)emit:(NSString *)name body:(id)body {
+    if (self.eventSink) {
+        self.eventSink(body);
+    }
 }
 
 - (void)secureViewWithBackgroundColor: (NSString *)color {
@@ -68,7 +122,8 @@ UIScrollView *scrollView;
       
     [textField setBackgroundColor: [UIColor clearColor]];
     [textField setSecureTextEntry: TRUE];
-    UIViewController *presentedViewController = RCTPresentedViewController();
+    UIViewController *rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;
+    UIViewController *presentedViewController = [self topViewController:rootViewController];
     UIImage *imageView = [self convertViewToImage:presentedViewController.view.superview];
     CIImage *inputImage = [CIImage imageWithCGImage:imageView.CGImage];
     
@@ -266,6 +321,25 @@ UIScrollView *scrollView;
   }
 }
 
+- (UIViewController*)topViewController:(UIViewController*)rootViewController {
+  if (rootViewController.presentedViewController == nil) {
+      return rootViewController;
+  }
+
+  if ([rootViewController.presentedViewController isKindOfClass:[UINavigationController class]]) {
+      UINavigationController *navigationController = (UINavigationController *)rootViewController.presentedViewController;
+      return [self topViewController:navigationController.viewControllers.lastObject];
+  }
+
+  if ([rootViewController.presentedViewController isKindOfClass:[UITabBarController class]]) {
+      UITabBarController *tabBarController = (UITabBarController *)rootViewController.presentedViewController;
+      return [self topViewController:tabBarController.selectedViewController];
+  }
+
+  return [self topViewController:rootViewController.presentedViewController];
+}
+
+
 - (UIColor *)colorFromHexString:(NSString *)hexString {
     unsigned rgbValue = 0;
     NSScanner *scanner = [NSScanner scannerWithString:hexString];
@@ -280,6 +354,18 @@ UIScrollView *scrollView;
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return image;
+}
+
+#pragma mark - FlutterStreamHandler methods
+
+- (FlutterError * _Nullable)onListenWithArguments:(id _Nullable)arguments eventSink:(FlutterEventSink)events {
+    self.eventSink = events;
+    return nil;
+}
+
+- (FlutterError * _Nullable)onCancelWithArguments:(id _Nullable)arguments {
+    self.eventSink = nil;
+    return nil;
 }
 
 @end

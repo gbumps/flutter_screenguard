@@ -15,6 +15,9 @@ typedef NS_ENUM(NSInteger, ScreenGuardImageAlignment) {
 NSString* _Nullable NSStringFromAlignment(ScreenGuardImageAlignment alignment);
 
 @interface FlutterScreenguardPlugin : NSObject<FlutterPlugin>
+
+@property (nonatomic, strong) FlutterEventSink eventSink;
+
 - (void)secureViewWithBackgroundColor: (NSString *_Nonnull)color;
 - (void)secureViewWithBlurView: (nonnull NSNumber *)radius;
 - (void)secureViewWithImage: (nonnull NSDictionary *) source

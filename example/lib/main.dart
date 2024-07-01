@@ -16,7 +16,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  final String _platformVersion = 'Unknown';
   final _flutterScreenguardPlugin = FlutterScreenguard();
 
   @override
@@ -31,8 +31,7 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      platformVersion =
-          await _flutterScreenguardPlugin.getPlatformVersion() ?? 'Unknown platform version';
+      await _flutterScreenguardPlugin.register();
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
@@ -42,9 +41,6 @@ class _MyAppState extends State<MyApp> {
     // setState to update our non-existent appearance.
     if (!mounted) return;
 
-    setState(() {
-      _platformVersion = platformVersion;
-    });
   }
 
   @override
