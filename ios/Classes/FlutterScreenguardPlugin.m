@@ -8,8 +8,6 @@ UIScrollView *scrollView;
 static NSString * const SCREENSHOT_EVT = @"onScreenShotCaptured";
 static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
 
-
-
 @implementation FlutterScreenguardPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   FlutterMethodChannel* channel = [FlutterMethodChannel
@@ -18,20 +16,23 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
   FlutterScreenguardPlugin* instance = [[FlutterScreenguardPlugin alloc] init];
   [registrar addMethodCallDelegate:instance channel:channel];
   FlutterEventChannel* eventChannel = [FlutterEventChannel
-                                             eventChannelWithName:@"module_xxxx/events"
+                                             eventChannelWithName:@"flutter_screenguard_event_receiver"
                                              binaryMessenger:[registrar messenger]];
   [eventChannel setStreamHandler:instance];
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   if ([@"register" isEqualToString:call.method]) {
+    NSString *color = call.arguments[@"color"];
       dispatch_async(dispatch_get_main_queue(), ^{
-            [self secureViewWithBackgroundColor: @"#FAFAFA"];
+        [self secureViewWithBackgroundColor: color];
       });
-      result(@{@"status": @"success"});
+    result(@{@"status": @"success"});
   } else if ([@"registerWithBlurView" isEqualToString:call.method]) {
+      NSNumber *radius = call.arguments[@"radius"];
+
       dispatch_async(dispatch_get_main_queue(), ^{
-            [self secureViewWithBlurView: @35];
+            [self secureViewWithBlurView: radius];
       });
       result(@{@"status": @"success"});
   } else if ([@"registerWithImage" isEqualToString:call.method]) {
@@ -48,6 +49,11 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
   } else if ([@"registerScreenRecordingEventListener" isEqualToString: call.method]) {
       dispatch_async(dispatch_get_main_queue(), ^{
             [self secureViewWithBackgroundColor: @"#FAFAFA"];
+      });
+      result(@{@"status": @"success"});
+  } else if ([@"unregister" isEqualToString: call.method]) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+            [self removeScreenShot];
       });
       result(@{@"status": @"success"});
   }
@@ -366,6 +372,9 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
 - (FlutterError * _Nullable)onCancelWithArguments:(id _Nullable)arguments {
     self.eventSink = nil;
     return nil;
+}
+
+- (void)secureViewWithImage:(nonnull NSDictionary *)source withDefaultSource:(nullable NSDictionary *)defaultSource withWidth:(nonnull NSNumber *)width withHeight:(nonnull NSNumber *)height withAlignment:(ScreenGuardImageAlignment)alignment withBackgroundColor:(nonnull NSString *)backgroundColor {
 }
 
 @end

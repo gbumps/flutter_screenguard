@@ -1,17 +1,98 @@
+import 'package:flutter/material.dart';
 
 import 'flutter_screenguard_platform_interface.dart';
 
 class FlutterScreenguard {
-  Future<void> register() {
-    return FlutterScreenguardPlatform.instance.register();
+  /// activate a screenshot blocking with a color effect view (iOS 13+, Android 8+)
+  /// [color] color of the background
+  ///
+  /// [timeAfterResume] (Android only) Time delayed for the view to stop displaying when going back
+  /// to the application (in milliseconds). Default = 1000ms
+  ///
+  /// function will throw warning when [timeAfterResume] bigger than 3000ms,
+  /// users have to wait for the application to turn off the filter before going back
+  /// to the main view, which is a very bad user experiences.
+  ///
+  /// Throws a [PlatformException] if there were technical problems on native side
+  /// (e.g. lack of relevant hardware).
+  Future<void> register({
+    required Color color,
+    Duration? timeAfterResume = const Duration(milliseconds: 1000),
+  }) {
+    /// activate a screenshot blocking with a color effect view (iOS 13+, Android 8+)
+    /// [color] color of the background, default Colors.black
+    ///
+    /// [timeAfterResume] (Android only) Time delayed for the view to stop displaying when going back
+    /// to the application (in milliseconds). Default = 1000ms
+    ///
+    /// function will throw warning when [timeAfterResume] bigger than 3000ms,
+    /// users have to wait for the application to turn off the filter before going back
+    /// to the main view, which is a very bad user experiences.
+    ///
+    /// Throws a [PlatformException] if there were technical problems on native side
+    /// (e.g. lack of relevant hardware).
+    return FlutterScreenguardPlatform.instance.register(
+      color: color,
+      timeAfterResume: timeAfterResume,
+    );
   }
 
-  Future<void> registerWithBlurView() {
-    return FlutterScreenguardPlatform.instance.registerWithBlurView();
+  /// [iOS, Android] activate a screenshot blocking with a blurred effect view (iOS 13+, Android 8+)
+  /// [radius] radius
+  ///
+  /// [timeAfterResume] (Android only) Time delayed for the view to stop displaying when going back
+  /// to the application (in milliseconds). Default = 1000ms
+  ///
+  /// function will throw warning when [timeAfterResume] bigger than 3000ms,
+  /// users have to wait for the application to turn off the filter before going back
+  /// to the main view, which is a very bad user experiences.
+  ///
+  /// Throws a [PlatformException] if there were technical problems on native side
+  /// (e.g. lack of relevant hardware).
+  Future<void> registerWithBlurView({
+    required int radius,
+    Duration? timeAfterResume = const Duration(milliseconds: 1000),
+  }) {
+    return FlutterScreenguardPlatform.instance
+        .registerWithBlurView(radius: radius, timeAfterResume: timeAfterResume);
   }
 
-  Future<void> registerWithImage() {
-    return FlutterScreenguardPlatform.instance.registerWithImage();
+  /// [iOS 13+, Android 8+] activate a screenshot blocking with an image effect view
+  /// [color] color of the background
+  ///
+  /// [uri] (required) uri of the image
+  ///
+  /// [width] (required) width of the image
+  ///
+  /// [height] (required) height of the image
+  ///
+  /// [alignment] Alignment of the image, default Alignment.center
+  ///
+  /// [timeAfterResume] (Android only) Time delayed for the view to stop displaying when going back
+  /// to the application (in milliseconds). Default = 1000ms
+  ///
+  /// function will throw warning when [timeAfterResume] bigger than 3000ms,
+  /// users have to wait for the application
+  /// to turn off the filter before going back to the main view, which is a very bad user
+  /// experiences.
+  ///
+  /// Throws a [PlatformException] if there were technical problems on native side
+  Future<void> registerWithImage({
+    required String uri,
+    required int width,
+    required int height,
+    Color? color = Colors.black,
+    Duration? timeAfterResume = const Duration(milliseconds: 1000),
+    Alignment? alignment = Alignment.center,
+  }) {
+    return FlutterScreenguardPlatform.instance.registerWithImage(
+      uri: uri,
+      width: width,
+      height: height,
+      color: color,
+      timeAfterResume: timeAfterResume,
+      alignment: alignment,
+    );
   }
 
   Future<void> registerWithoutEffect() {
@@ -19,11 +100,13 @@ class FlutterScreenguard {
   }
 
   Future<void> registerScreenshotEventListener() {
-    return FlutterScreenguardPlatform.instance.registerScreenshotEventListener();
+    return FlutterScreenguardPlatform.instance
+        .registerScreenshotEventListener();
   }
 
   Future<void> registerScreenRecordingEventListener() {
-    return FlutterScreenguardPlatform.instance.registerScreenRecordingEventListener();
+    return FlutterScreenguardPlatform.instance
+        .registerScreenRecordingEventListener();
   }
 
   Future<void> unregister() {

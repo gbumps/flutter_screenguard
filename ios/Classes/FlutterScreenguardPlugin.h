@@ -16,7 +16,7 @@ NSString* _Nullable NSStringFromAlignment(ScreenGuardImageAlignment alignment);
 
 @interface FlutterScreenguardPlugin : NSObject<FlutterPlugin>
 
-@property (nonatomic, strong) FlutterEventSink eventSink;
+@property (nonatomic, strong) FlutterEventSink _Nullable eventSink;
 
 - (void)secureViewWithBackgroundColor: (NSString *_Nonnull)color;
 - (void)secureViewWithBlurView: (nonnull NSNumber *)radius;
