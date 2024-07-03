@@ -17,12 +17,13 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late final FlutterScreenguard _flutterScreenguardPlugin;
+  late int selection;
 
   @override
   void initState() {
     super.initState();
     _flutterScreenguardPlugin = FlutterScreenguard();
-    // initPlatformState();
+    selection = -1; // initPlatformState();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -43,34 +44,71 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Column(
-          children: [
-            InkWell(
-              onTap: () async {
-                await _flutterScreenguardPlugin.register(color: Colors.green);
-              },
-              child: const Text('Activate with color: '),
-            ),
-            const SizedBox(
-              height: 14,
-            ),
-            InkWell(
-              onTap: () async {
-                await _flutterScreenguardPlugin.registerWithBlurView(
-                    radius: 20);
-              },
-              child: const Text('Activate with blur : '),
-            ),
-            const SizedBox(
-              height: 14,
-            ),
-            InkWell(
-              onTap: () async {
-                await _flutterScreenguardPlugin.unregister();
-              },
-              child: Text('unregister'),
-            ),
-          ],
+        body: Center(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              InkWell(
+                onTap: () async {
+                  await _flutterScreenguardPlugin.register(color: Colors.green);
+                  setState(() {
+                    selection = 0;
+                  });
+                },
+                child: Text(
+                  'Activate with color ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: selection == 0 ? Colors.green : Colors.black,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 14,
+              ),
+              InkWell(
+                onTap: () async {
+                  await _flutterScreenguardPlugin.registerWithBlurView(
+                      radius: 20);
+                  setState(() {
+                    selection = 1;
+                  });
+                },
+                child: Text(
+                  'Activate with blurview: ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: selection == 1 ? Colors.green : Colors.black,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 14,
+              ),
+              InkWell(
+                onTap: () async {
+                  await _flutterScreenguardPlugin.unregister();
+                  setState(() {
+                    selection = 2;
+                  });
+                },
+                child: Text(
+                  'unregister',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: selection == 2 ? Colors.green : Colors.black,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

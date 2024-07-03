@@ -32,7 +32,7 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
       NSNumber *radius = call.arguments[@"radius"];
 
       dispatch_async(dispatch_get_main_queue(), ^{
-            [self secureViewWithBlurView: radius];
+        [self secureViewWithBlurView: radius];
       });
       result(@{@"status": @"success"});
   } else if ([@"registerWithImage" isEqualToString:call.method]) {
