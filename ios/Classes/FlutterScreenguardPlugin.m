@@ -36,26 +36,67 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
       });
       result(@{@"status": @"success"});
   } else if ([@"registerWithImage" isEqualToString:call.method]) {
-//       dispatch_async(dispatch_get_main_queue(), ^{
-//             [self secureViewWithImage: withDefaultSource:<#(nullable NSDictionary *)#> withWidth:<#(nonnull NSNumber *)#> withHeight:<#(nonnull NSNumber *)#> withAlignment:<#(ScreenGuardImageAlignment)#> withBackgroundColor:<#(nonnull NSString *)#>: @"#FAFAFA"];
-//       });
-      result(@{@"status": @"success"});
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    formatter.numberStyle = NSNumberFormatterDecimalStyle;
+      
+    NSString *source = call.arguments[@"uri"];
+    NSString *defaultSource = call.arguments[@"defaultSource"];
+      
+    NSString *dataWidth = call.arguments[@"width"];
+    NSString *dataHeight = call.arguments[@"height"];
+      
+    NSNumber *width = @([dataWidth floatValue]);
+    NSNumber *height = @([dataHeight floatValue]);
+      
+    NSNumber *top = call.arguments[@"top"];
+    NSNumber *left = call.arguments[@"left"];
+    NSNumber *bottom = call.arguments[@"bottom"];
+    NSNumber *right = call.arguments[@"right"];
+      
+    NSString *backgroundColor = call.arguments[@"color"];
+    NSNumber *alignmentData = call.arguments[@"alignment"];
+      
+    if (alignmentData != nil) {
+        NSInteger alignment = [alignmentData integerValue];
+        ScreenGuardImageAlignment dataAlignment = (ScreenGuardImageAlignment)alignment;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self secureViewWithImageAlignment: source
+                            // withDefaultSource: defaultSource
+                                     withWidth: width
+                                    withHeight: height
+                                 withAlignment: dataAlignment
+                           withBackgroundColor: backgroundColor];
+        });
+    } else {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self secureViewWithImagePosition: source
+                           // withDefaultSource: defaultSource
+                                    withWidth: width
+                                   withHeight: height
+                                      withTop: top
+                                     withLeft: left
+                                   withBottom: bottom
+                                    withRight: right
+                          withBackgroundColor: backgroundColor];
+        });
+    }
+    result(@{@"status": @"success"});
   } else if ([@"registerScreenshotEventListener" isEqualToString: call.method]) {
-      //TODO get params
-      dispatch_async(dispatch_get_main_queue(), ^{
-          [self registerScreenShotEventListener: true];
-      });
-      result(@{@"status": @"success"});
+    //TODO get params
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self registerScreenShotEventListener: true];
+    });
+    result(@{@"status": @"success"});
   } else if ([@"registerScreenRecordingEventListener" isEqualToString: call.method]) {
-      dispatch_async(dispatch_get_main_queue(), ^{
-            [self secureViewWithBackgroundColor: @"#FAFAFA"];
-      });
-      result(@{@"status": @"success"});
+    dispatch_async(dispatch_get_main_queue(), ^{
+          [self secureViewWithBackgroundColor: @"#FAFAFA"];
+    });
+    result(@{@"status": @"success"});
   } else if ([@"unregister" isEqualToString: call.method]) {
-      dispatch_async(dispatch_get_main_queue(), ^{
-            [self removeScreenShot];
-      });
-      result(@{@"status": @"success"});
+    dispatch_async(dispatch_get_main_queue(), ^{
+          [self removeScreenShot];
+    });
+    result(@{@"status": @"success"});
   }
 }
 
@@ -152,8 +193,8 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
   } else return;
 }
 
-- (void)secureViewWithImageAlignment: (nonnull NSDictionary *) source
-                   withDefaultSource: (nullable NSDictionary *) defaultSource
+- (void)secureViewWithImageAlignment: (nonnull NSString *) source
+//                   withDefaultSource: (nullable NSDictionary *) defaultSource
                            withWidth: (nonnull NSNumber *) width
                           withHeight: (nonnull NSNumber *) height
                        withAlignment: (ScreenGuardImageAlignment) alignment
@@ -166,32 +207,29 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
 
     [textField setSecureTextEntry: TRUE];
     [textField setContentMode: UIViewContentModeCenter];
-    if (scrollView == nil) {
-        scrollView = [[UIScrollView alloc] initWithFrame:[UIScreen mainScreen].bounds];
-    }
-    scrollView.showsHorizontalScrollIndicator = NO;
-    scrollView.showsVerticalScrollIndicator = NO;
-    scrollView.scrollEnabled = false;
+   
     imageView = [[UIImageView alloc] initWithFrame: CGRectMake(0, 0, [width doubleValue], [height doubleValue])];
-        
     imageView.translatesAutoresizingMaskIntoConstraints = NO;
-    [imageView setClipsToBounds:TRUE];
-    [scrollView addSubview:imageView];
       
-    if (source[@"uri"] != nil) {
-        NSString *uriImage = source[@"uri"];
-        NSString *uriDefaultSource = defaultSource[@"uri"];
+    [imageView setClipsToBounds:TRUE];
+      
+    NSString *uriImage = source;
+//  NSString *uriDefaultSource = defaultSource[@"uri"];
+    NSURL *urlDefaultSource = nil;
         
-        NSURL *urlDefaultSource = [NSURL URLWithString: uriDefaultSource];
+    SDWebImageDownloaderOptions downloaderOptions = SDWebImageDownloaderScaleDownLargeImages;
         
-        SDWebImageDownloaderOptions downloaderOptions = SDWebImageDownloaderScaleDownLargeImages;
+    UIImage *thumbnailImage = nil;
         
-        UIImage *thumbnailImage = uriDefaultSource != nil ? [UIImage imageWithData: [NSData dataWithContentsOfURL: urlDefaultSource]] : nil;
-        
-        [imageView sd_setImageWithURL: [NSURL URLWithString: uriImage]
-                     placeholderImage: thumbnailImage
-                              options: downloaderOptions
-                            completed: ^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
+    [imageView sd_setImageWithURL: [NSURL URLWithString: uriImage]
+                 placeholderImage: thumbnailImage
+                          options: downloaderOptions
+                        completed: ^(
+                                     UIImage * _Nullable image,
+                                     NSError * _Nullable error,
+                                     SDImageCacheType cacheType,
+                                     NSURL * _Nullable imageURL
+                                    ) {
              switch (alignment) {
                  case AlignmentTopLeft:
                      [imageView setContentMode: UIViewContentModeTopLeft];
@@ -224,14 +262,13 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
         }];
     }
       
-    [textField addSubview: scrollView];
-    [textField sendSubviewToBack: scrollView];
+    [textField addSubview: imageView];
+    [textField sendSubviewToBack: imageView];
     [textField setBackgroundColor: [self colorFromHexString: backgroundColor]];
-  } else return;
 }
 
-- (void)secureViewWithImagePosition: (nonnull NSDictionary *) source
-                  withDefaultSource: (nullable NSDictionary *) defaultSource
+- (void)secureViewWithImagePosition: (nonnull NSString *) source
+//                  withDefaultSource: (nullable NSDictionary *) defaultSource
                           withWidth: (nonnull NSNumber *) width
                          withHeight: (nonnull NSNumber *) height
                             withTop: (NSNumber *) top
@@ -266,9 +303,10 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
    [imageView setClipsToBounds:TRUE];
    [scrollView addSubview:imageView];
      
-   if (source[@"uri"] != nil) {
-       NSString *uriImage = source[@"uri"];
-       NSString *uriDefaultSource = defaultSource[@"uri"];
+   
+    NSString *uriImage = source;
+     NSString *uriDefaultSource = nil;
+     //defaultSource[@"uri"];
        
        NSURL *urlDefaultSource = [NSURL URLWithString: uriDefaultSource];
        
@@ -286,7 +324,6 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
    [textField addSubview: scrollView];
    [textField sendSubviewToBack: scrollView];
    [textField setBackgroundColor: [self colorFromHexString: backgroundColor]];
- } else return;
 }
 
 - (void) initTextField {

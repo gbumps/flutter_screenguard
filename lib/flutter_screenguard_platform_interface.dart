@@ -57,7 +57,7 @@ abstract class FlutterScreenguardPlatform extends PlatformInterface {
   /// Throws a [PlatformException] if there were technical problems on native side
   /// (e.g. lack of relevant hardware).
   Future<void> registerWithBlurView({
-    required int radius,
+    required num radius,
     Duration? timeAfterResume = const Duration(milliseconds: 1000),
   }) {
     throw UnimplementedError(
@@ -86,11 +86,11 @@ abstract class FlutterScreenguardPlatform extends PlatformInterface {
   /// Throws a [PlatformException] if there were technical problems on native side
   Future<void> registerWithImage({
     required String uri,
-    required int width,
-    required int height,
+    required double width,
+    required double height,
     Color? color = Colors.black,
     Duration? timeAfterResume = const Duration(milliseconds: 1000),
-    Alignment? alignment = Alignment.center,
+    Alignment? alignment,
     int? top, 
     int? left, 
     int? bottom, 
