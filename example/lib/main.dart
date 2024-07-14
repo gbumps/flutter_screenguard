@@ -96,7 +96,7 @@ class _MyAppState extends State<MyApp> {
                   await _flutterScreenguardPlugin.registerWithImage(
                     uri:
                         'https://lh3.googleusercontent.com/blogger_img_proxy/AEn0k_uyWh3jBn3GEzf8AINr-3AoffbUXdml95nPjgjpu-amM4xjOi2L6fi6VmGcMHXLRuGXpklc3lXksPu1NKIOrzhbeHBgGVl3Fxi5f7sr8w5yGF-oTWXx-kJTrD8TTlRi96jPEXq4qzhtJd32hNtQ_F7J=w919-h516-p-k-no-nu',
-                    width: MediaQuery.of(context).size.width / 2,
+                    width: MediaQuery.of(context).size.width * (2/3),
                     height: MediaQuery.of(context).size.height / 2,
                     alignment: Alignment.center,
                     timeAfterResume: const Duration(milliseconds: 2000),

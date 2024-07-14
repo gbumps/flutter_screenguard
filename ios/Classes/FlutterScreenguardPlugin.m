@@ -117,8 +117,8 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
     
     if (getScreenShotPath) {
       UIViewController *rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;
-      UIViewController *presentedViewController = [self topViewController:rootViewController];
-      UIImage *image = [self convertViewToImage:presentedViewController.view.superview];
+//      UIViewController *presentedViewController = [self topViewController:rootViewController];
+      UIImage *image = [self convertViewToImage:rootViewController.view.superview];
       NSData *data = UIImagePNGRepresentation(image);
       if (!data) {
           [self emit:SCREENSHOT_EVT body: nil];
@@ -170,8 +170,8 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
     [textField setBackgroundColor: [UIColor clearColor]];
     [textField setSecureTextEntry: TRUE];
     UIViewController *rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;
-    UIViewController *presentedViewController = [self topViewController:rootViewController];
-    UIImage *imageView = [self convertViewToImage:presentedViewController.view.superview];
+//    UIViewController *presentedViewController = [self topViewController:rootViewController];
+    UIImage *imageView = [self convertViewToImage:rootViewController.view.superview];
     CIImage *inputImage = [CIImage imageWithCGImage:imageView.CGImage];
     
     CIContext *context = [CIContext contextWithOptions:nil];
@@ -193,79 +193,50 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
   } else return;
 }
 
-- (void)secureViewWithImageAlignment: (nonnull NSString *) source
-//                   withDefaultSource: (nullable NSDictionary *) defaultSource
-                           withWidth: (nonnull NSNumber *) width
-                          withHeight: (nonnull NSNumber *) height
-                       withAlignment: (ScreenGuardImageAlignment) alignment
-                 withBackgroundColor: (nonnull NSString *) backgroundColor 
+- (void)secureViewWithImageAlignment:(nonnull NSString *)source
+//                  withDefaultSource:(nullable NSDictionary *)defaultSource
+                          withWidth:(nonnull NSNumber *)width
+                         withHeight:(nonnull NSNumber *)height
+                      withAlignment:(ScreenGuardImageAlignment)alignment
+                withBackgroundColor:(nonnull NSString *)backgroundColor
 {
-  if (@available(iOS 13.0, *)) {
+   if (@available(iOS 13.0, *)) {
     if (textField == nil) {
       [self initTextField];
     }
 
     [textField setSecureTextEntry: TRUE];
     [textField setContentMode: UIViewContentModeCenter];
-   
+    
     imageView = [[UIImageView alloc] initWithFrame: CGRectMake(0, 0, [width doubleValue], [height doubleValue])];
+        
     imageView.translatesAutoresizingMaskIntoConstraints = NO;
-      
-    [imageView setClipsToBounds:TRUE];
-      
-    NSString *uriImage = source;
-//  NSString *uriDefaultSource = defaultSource[@"uri"];
-    NSURL *urlDefaultSource = nil;
-        
+    [imageView setClipsToBounds:YES];
     SDWebImageDownloaderOptions downloaderOptions = SDWebImageDownloaderScaleDownLargeImages;
+    
+
+        NSString *uriImage = source;
         
-    UIImage *thumbnailImage = nil;
-        
-    [imageView sd_setImageWithURL: [NSURL URLWithString: uriImage]
-                 placeholderImage: thumbnailImage
-                          options: downloaderOptions
-                        completed: ^(
-                                     UIImage * _Nullable image,
-                                     NSError * _Nullable error,
-                                     SDImageCacheType cacheType,
-                                     NSURL * _Nullable imageURL
-                                    ) {
-             switch (alignment) {
-                 case AlignmentTopLeft:
-                     [imageView setContentMode: UIViewContentModeTopLeft];
-                     break;
-                 case AlignmentTopCenter:
-                     [imageView setContentMode: UIViewContentModeTop];
-                     break;
-                 case AlignmentTopRight:
-                     [imageView setContentMode: UIViewContentModeTopRight];
-                     break;
-                 case AlignmentCenterLeft:
-                     [imageView setContentMode: UIViewContentModeLeft];
-                     break;
-                 case AlignmentCenter:
-                     [imageView setContentMode: UIViewContentModeCenter];
-                     break;
-                 case AlignmentCenterRight:
-                     [imageView setContentMode: UIViewContentModeRight];
-                     break;
-                 case AlignmentBottomLeft:
-                     [imageView setContentMode: UIViewContentModeBottomLeft];
-                     break;
-                 case AlignmentBottomCenter:
-                     [imageView setContentMode: UIViewContentModeBottom];
-                     break;
-                 case AlignmentBottomRight:
-                     [imageView setContentMode: UIViewContentModeBottomRight];
-                     break;
-             }
+        [imageView sd_setImageWithURL: [NSURL URLWithString: uriImage]
+                     placeholderImage: nil 
+                              options: downloaderOptions
+                            completed: ^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
         }];
-    }
-      
-    [textField addSubview: imageView];
-    [textField sendSubviewToBack: imageView];
-    [textField setBackgroundColor: [self colorFromHexString: backgroundColor]];
+    
+      if (scrollView == nil) {
+        scrollView = [[UIScrollView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        scrollView.showsHorizontalScrollIndicator = NO;
+        scrollView.showsVerticalScrollIndicator = NO;
+        scrollView.scrollEnabled = false;
+      }
+      [self setImageView: alignment];
+      [textField addSubview: scrollView];
+      [textField sendSubviewToBack: scrollView];
+      [textField setBackgroundColor: [self colorFromHexString: backgroundColor]];
+
+  } else return;
 }
+
 
 - (void)secureViewWithImagePosition: (nonnull NSString *) source
 //                  withDefaultSource: (nullable NSDictionary *) defaultSource
@@ -283,47 +254,106 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
    }
    [textField setSecureTextEntry: TRUE];
    [textField setContentMode: UIViewContentModeCenter];
+     
    if (scrollView == nil) {
      scrollView = [[UIScrollView alloc] initWithFrame:[UIScreen mainScreen].bounds];
      scrollView.showsHorizontalScrollIndicator = NO;
      scrollView.showsVerticalScrollIndicator = NO;
      scrollView.scrollEnabled = false;
    }
-   CGFloat topInset = top ? [top doubleValue] : 0;
-   CGFloat leftInset = left ? [left doubleValue] : 0;
-   CGFloat bottomInset = bottom ? [bottom doubleValue] : 0;
-   CGFloat rightInset = right ? [right doubleValue] : 0;
-     
-   scrollView.contentInset = UIEdgeInsetsMake(topInset, leftInset, bottomInset, rightInset);
    
    imageView = [[UIImageView alloc] initWithFrame: CGRectMake(0, 0, [width doubleValue], [height doubleValue])];
      
    imageView.translatesAutoresizingMaskIntoConstraints = NO;
      
-   [imageView setClipsToBounds:TRUE];
-   [scrollView addSubview:imageView];
-     
-   
+   [imageView setClipsToBounds: TRUE];
+
     NSString *uriImage = source;
-     NSString *uriDefaultSource = nil;
-     //defaultSource[@"uri"];
-       
-       NSURL *urlDefaultSource = [NSURL URLWithString: uriDefaultSource];
-       
-       SDWebImageDownloaderOptions downloaderOptions = SDWebImageDownloaderScaleDownLargeImages;
-       
-       UIImage *thumbnailImage = uriDefaultSource != nil ? [UIImage imageWithData: [NSData dataWithContentsOfURL: urlDefaultSource]] : nil;
-       
+    SDWebImageDownloaderOptions downloaderOptions = SDWebImageDownloaderScaleDownLargeImages;
+     
        [imageView sd_setImageWithURL: [NSURL URLWithString: uriImage]
-                    placeholderImage: thumbnailImage
+                    placeholderImage: nil
                              options: downloaderOptions
                            completed: ^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
        }];
-   }
+   
+   [self setImageViewBasedOnPosition:[top doubleValue] left:[left doubleValue] bottom:[bottom doubleValue] right:[right doubleValue]];
      
    [textField addSubview: scrollView];
    [textField sendSubviewToBack: scrollView];
    [textField setBackgroundColor: [self colorFromHexString: backgroundColor]];
+ } else return;
+}
+
+- (void)setImageView: (ScreenGuardImageAlignment)alignment {
+    [scrollView addSubview:imageView];
+    
+    CGFloat scrollViewWidth = scrollView.bounds.size.width;
+    CGFloat scrollViewHeight = scrollView.bounds.size.height;
+    CGFloat imageViewWidth = imageView.bounds.size.width;
+    CGFloat imageViewHeight = imageView.bounds.size.height;
+
+    CGPoint imageViewOrigin;
+
+    switch (alignment) {
+        case AlignmentTopLeft:
+            imageViewOrigin = CGPointMake(0, 0);
+            break;
+        case AlignmentTopCenter:
+            imageViewOrigin = CGPointMake((scrollViewWidth - imageViewWidth) / 2, 0);
+            break;
+        case AlignmentTopRight:
+            imageViewOrigin = CGPointMake(scrollViewWidth - imageViewWidth, 0);
+            break;
+        case AlignmentCenterLeft:
+            imageViewOrigin = CGPointMake(0, (scrollViewHeight - imageViewHeight) / 2);
+            break;
+        case AlignmentCenter:
+            imageViewOrigin = CGPointMake((scrollViewWidth - imageViewWidth) / 2, (scrollViewHeight - imageViewHeight) / 2);
+            break;
+        case AlignmentCenterRight:
+            imageViewOrigin = CGPointMake(scrollViewWidth - imageViewWidth, (scrollViewHeight - imageViewHeight) / 2);
+            break;
+        case AlignmentBottomLeft:
+            imageViewOrigin = CGPointMake(0, scrollViewHeight - imageViewHeight);
+            break;
+        case AlignmentBottomCenter:
+            imageViewOrigin = CGPointMake((scrollViewWidth - imageViewWidth) / 2, scrollViewHeight - imageViewHeight);
+            break;
+        case AlignmentBottomRight:
+            imageViewOrigin = CGPointMake(scrollViewWidth - imageViewWidth, scrollViewHeight - imageViewHeight);
+            break;
+        default:
+            imageViewOrigin = CGPointZero;
+            break;
+    }
+
+    imageView.frame = CGRectMake(imageViewOrigin.x, imageViewOrigin.y, imageViewWidth, imageViewHeight);
+
+    CGFloat contentWidth = MAX(scrollViewWidth, imageViewOrigin.x + imageViewWidth);
+    CGFloat contentHeight = MAX(scrollViewHeight, imageViewOrigin.y + imageViewHeight);
+    scrollView.contentSize = CGSizeMake(contentWidth, contentHeight);
+}
+
+- (void)setImageViewBasedOnPosition:(double)top left:(double)left bottom:(double)bottom right:(double)right {
+    [scrollView addSubview:imageView];
+    
+    CGFloat scrollViewWidth = scrollView.bounds.size.width;
+    CGFloat scrollViewHeight = scrollView.bounds.size.height;
+    CGFloat imageViewWidth = imageView.bounds.size.width;
+    CGFloat imageViewHeight = imageView.bounds.size.height;
+
+    CGFloat centerX = scrollViewWidth / 2;
+    CGFloat centerY = scrollViewHeight / 2;
+
+    CGFloat imageViewX = centerX + left - right - (imageViewWidth / 2);
+    CGFloat imageViewY = centerY + top - bottom - (imageViewHeight / 2);
+
+    imageView.frame = CGRectMake(imageViewX, imageViewY, imageViewWidth, imageViewHeight);
+
+    CGFloat contentWidth = MAX(scrollViewWidth, fabs(left - right) + imageViewWidth);
+    CGFloat contentHeight = MAX(scrollViewHeight, fabs(top - bottom) + imageViewHeight);
+    scrollView.contentSize = CGSizeMake(contentWidth, contentHeight);
 }
 
 - (void) initTextField {
