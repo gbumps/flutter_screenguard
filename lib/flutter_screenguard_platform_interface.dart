@@ -91,10 +91,10 @@ abstract class FlutterScreenguardPlatform extends PlatformInterface {
     Color? color = Colors.black,
     Duration? timeAfterResume = const Duration(milliseconds: 1000),
     Alignment? alignment,
-    int? top, 
-    int? left, 
-    int? bottom, 
-    int? right, 
+    double? top, 
+    double? left, 
+    double? bottom, 
+    double? right, 
   }) {
     throw UnimplementedError('register() has not been implemented.');
   }

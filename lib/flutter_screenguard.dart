@@ -84,10 +84,10 @@ class FlutterScreenguard {
     Color? color = Colors.black,
     Duration? timeAfterResume = const Duration(milliseconds: 1000),
     Alignment? alignment,
-    int? top,
-    int? left,
-    int? bottom,
-    int? right,
+    double? top,
+    double? left,
+    double? bottom,
+    double? right,
   }) {
     return FlutterScreenguardPlatform.instance.registerWithImage(
       uri: uri,

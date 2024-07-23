@@ -1,153 +1,133 @@
 #import "FlutterScreenguardPlugin.h"
+#import "FlutterScreenguardScreenshotListener.h"
+#import "FlutterScreenguardRecordingListener.h"
 #import "SDWebImage/SDWebImage.h"
 
 UITextField *textField;
 UIImageView *imageView;
 UIScrollView *scrollView;
 
-static NSString * const SCREENSHOT_EVT = @"onScreenShotCaptured";
-static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
+
+FlutterScreenguardPlugin* instance;
+FlutterMethodChannel* eventChannelScreenRecording;
+FlutterMethodChannel* eventChannelScreenshot;
 
 @implementation FlutterScreenguardPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   FlutterMethodChannel* channel = [FlutterMethodChannel
       methodChannelWithName:@"flutter_screenguard"
             binaryMessenger:[registrar messenger]];
-  FlutterScreenguardPlugin* instance = [[FlutterScreenguardPlugin alloc] init];
+  instance = [[FlutterScreenguardPlugin alloc] init];
   [registrar addMethodCallDelegate:instance channel:channel];
-  FlutterEventChannel* eventChannel = [FlutterEventChannel
-                                             eventChannelWithName:@"flutter_screenguard_event_receiver"
-                                             binaryMessenger:[registrar messenger]];
-  [eventChannel setStreamHandler:instance];
+  eventChannelScreenshot = [FlutterMethodChannel
+                                                  methodChannelWithName:@"flutter_screenguard_screenshot_event"
+                                                  binaryMessenger:[registrar messenger]];
+  eventChannelScreenRecording = [FlutterMethodChannel
+                                      methodChannelWithName:@"flutter_screenguard_screen_recording_event"
+                                 binaryMessenger:[registrar messenger]];
+  [registrar addMethodCallDelegate:instance channel:eventChannelScreenRecording];
+  [registrar addMethodCallDelegate:instance channel:eventChannelScreenshot];
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  if ([@"register" isEqualToString:call.method]) {
-    NSString *color = call.arguments[@"color"];
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [self secureViewWithBackgroundColor: color];
-      });
-    result(@{@"status": @"success"});
-  } else if ([@"registerWithBlurView" isEqualToString:call.method]) {
-      NSNumber *radius = call.arguments[@"radius"];
-
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [self secureViewWithBlurView: radius];
-      });
-      result(@{@"status": @"success"});
-  } else if ([@"registerWithImage" isEqualToString:call.method]) {
-    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-    formatter.numberStyle = NSNumberFormatterDecimalStyle;
-      
-    NSString *source = call.arguments[@"uri"];
-    NSString *defaultSource = call.arguments[@"defaultSource"];
-      
-    NSString *dataWidth = call.arguments[@"width"];
-    NSString *dataHeight = call.arguments[@"height"];
-      
-    NSNumber *width = @([dataWidth floatValue]);
-    NSNumber *height = @([dataHeight floatValue]);
-      
-    NSNumber *top = call.arguments[@"top"];
-    NSNumber *left = call.arguments[@"left"];
-    NSNumber *bottom = call.arguments[@"bottom"];
-    NSNumber *right = call.arguments[@"right"];
-      
-    NSString *backgroundColor = call.arguments[@"color"];
-    NSNumber *alignmentData = call.arguments[@"alignment"];
-      
-    if (alignmentData != nil) {
-        NSInteger alignment = [alignmentData integerValue];
-        ScreenGuardImageAlignment dataAlignment = (ScreenGuardImageAlignment)alignment;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self secureViewWithImageAlignment: source
-                            // withDefaultSource: defaultSource
-                                     withWidth: width
-                                    withHeight: height
-                                 withAlignment: dataAlignment
-                           withBackgroundColor: backgroundColor];
-        });
-    } else {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self secureViewWithImagePosition: source
-                           // withDefaultSource: defaultSource
-                                    withWidth: width
-                                   withHeight: height
-                                      withTop: top
-                                     withLeft: left
-                                   withBottom: bottom
-                                    withRight: right
-                          withBackgroundColor: backgroundColor];
-        });
-    }
-    result(@{@"status": @"success"});
-  } else if ([@"registerScreenshotEventListener" isEqualToString: call.method]) {
-    //TODO get params
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self registerScreenShotEventListener: true];
-    });
-    result(@{@"status": @"success"});
-  } else if ([@"registerScreenRecordingEventListener" isEqualToString: call.method]) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-          [self secureViewWithBackgroundColor: @"#FAFAFA"];
-    });
-    result(@{@"status": @"success"});
-  } else if ([@"unregister" isEqualToString: call.method]) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-          [self removeScreenShot];
-    });
-    result(@{@"status": @"success"});
-  }
-}
-
-- (NSArray<NSString *> *)supportedEvents {
-  return @[SCREENSHOT_EVT, SCREEN_RECORDING_EVT];
-}
-
-- (void) registerScreenShotEventListener: (BOOL) getScreenShotPath {
-  NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-  NSOperationQueue *mainQueue = [NSOperationQueue mainQueue];
-  [center removeObserver:self
-                    name:UIApplicationUserDidTakeScreenshotNotification
-                  object:nil];
-  [center addObserverForName:UIApplicationUserDidTakeScreenshotNotification
-                      object:nil
-                       queue:mainQueue
-                  usingBlock:^(NSNotification *notification) {
+    NSString *method = call.method;
     
-    if (getScreenShotPath) {
-      UIViewController *rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;
-//      UIViewController *presentedViewController = [self topViewController:rootViewController];
-      UIImage *image = [self convertViewToImage:rootViewController.view.superview];
-      NSData *data = UIImagePNGRepresentation(image);
-      if (!data) {
-          [self emit:SCREENSHOT_EVT body: nil];
-        // reject(@"error", @"Failed to convert image to PNG", nil);
-        return;
-      }
-
-      NSString *tempDir = NSTemporaryDirectory();
-      NSString *fileName = [[NSUUID UUID] UUIDString];
-      NSString *filePath = [tempDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.png", fileName]];
-
-      NSError *error = nil;
-      NSDictionary *result;
-      BOOL success = [data writeToFile:filePath options:NSDataWritingAtomic error:&error];
-      if (!success) {
-          result = @{@"path": @"Error retrieving file", @"name": @"", @"type": @""};
-      } else {
-        result = @{@"path": filePath, @"name": fileName, @"type": @"PNG"};
-      }
-      [self emit:SCREENSHOT_EVT body: result];
-    } else {
-      [self emit:SCREENSHOT_EVT body: nil];
+    if ([method isEqualToString: @"register"]) {
+        NSString *color = call.arguments[@"color"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self secureViewWithBackgroundColor: color];
+        });
+        result(@{@"status": @"success"});
+    } else if ([method isEqualToString: @"registerWithBlurView" ]) {
+        NSNumber *radius = call.arguments[@"radius"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self secureViewWithBlurView: radius];
+        });
+        result(@{@"status": @"success"});
+    
+    } else if ([method isEqualToString: @"registerWithImage"]) {
+        NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+        formatter.numberStyle = NSNumberFormatterDecimalStyle;
+        
+        NSString *source = call.arguments[@"uri"];
+        NSString *defaultSource = call.arguments[@"defaultSource"];
+        
+        NSString *dataWidth = call.arguments[@"width"];
+        NSString *dataHeight = call.arguments[@"height"];
+        
+        NSNumber *width = @([dataWidth floatValue]);
+        NSNumber *height = @([dataHeight floatValue]);
+        
+        NSNumber *top = call.arguments[@"top"];
+        NSNumber *left = call.arguments[@"left"];
+        NSNumber *bottom = call.arguments[@"bottom"];
+        NSNumber *right = call.arguments[@"right"];
+        
+        NSString *backgroundColor = call.arguments[@"color"];
+        NSNumber *alignmentData = call.arguments[@"alignment"];
+        
+        if (alignmentData != nil) {
+            NSInteger alignment = [alignmentData integerValue];
+            ScreenGuardImageAlignment dataAlignment = (ScreenGuardImageAlignment)alignment;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self secureViewWithImageAlignment: source
+                 // withDefaultSource: defaultSource
+                                         withWidth: width
+                                        withHeight: height
+                                     withAlignment: dataAlignment
+                               withBackgroundColor: backgroundColor];
+            });
+        } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self secureViewWithImagePosition: source
+                 // withDefaultSource: defaultSource
+                                        withWidth: width
+                                       withHeight: height
+                                          withTop: top
+                                         withLeft: left
+                                       withBottom: bottom
+                                        withRight: right
+                              withBackgroundColor: backgroundColor];
+            });
+            
+            result(@{@"status": @"success"});
+        }
     }
-  }];
-}
-
-- (void)emit:(NSString *)name body:(id)body {
-    if (self.eventSink) {
-        self.eventSink(body);
+     else if ([method isEqualToString: REGISTER_SCREEN_RECORDING_EVT]) {
+         dispatch_async(dispatch_get_main_queue(), ^{
+             if (instance.screenRecordingListener == nil) {
+                 instance.screenRecordingListener = [[FlutterScreenguardRecordingListener alloc] initWithChannel: eventChannelScreenRecording];
+             }
+         });
+        result(@{@"status": @"success"});
+    } else if ([method isEqualToString: @"unregister"]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self removeScreenShot];
+        });
+        result(@{@"status": @"success"});
+    } else if ([method isEqualToString: DEACTIVATE_SCREEN_RECORDING_EVT]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (instance.screenRecordingListener != nil) {
+                [instance.screenRecordingListener stopListening];
+                instance.screenRecordingListener = nil;
+            }
+        });
+        result(@"disposed screen recording");
+    } else if ([method isEqualToString: REGISTER_SCREENSHOT_EVT]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (instance.screenShotListener == nil) {
+                instance.screenShotListener = [[FlutterScreenguardScreenshotListener alloc] initWithChannel: eventChannelScreenshot];
+            }
+        });
+        result(@{@"status": @"success"});
+    } else if ([method isEqualToString: DEACTIVATE_SCREENSHOT_EVT]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (instance.screenShotListener != nil) {
+                [instance.screenShotListener stopListening];
+                instance.screenShotListener = nil;
+            }
+        });
+        result(@"disposed screenshot");
     }
 }
 
@@ -430,16 +410,6 @@ static NSString * const SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
 }
 
 #pragma mark - FlutterStreamHandler methods
-
-- (FlutterError * _Nullable)onListenWithArguments:(id _Nullable)arguments eventSink:(FlutterEventSink)events {
-    self.eventSink = events;
-    return nil;
-}
-
-- (FlutterError * _Nullable)onCancelWithArguments:(id _Nullable)arguments {
-    self.eventSink = nil;
-    return nil;
-}
 
 - (void)secureViewWithImage:(nonnull NSDictionary *)source withDefaultSource:(nullable NSDictionary *)defaultSource withWidth:(nonnull NSNumber *)width withHeight:(nonnull NSNumber *)height withAlignment:(ScreenGuardImageAlignment)alignment withBackgroundColor:(nonnull NSString *)backgroundColor {
 }

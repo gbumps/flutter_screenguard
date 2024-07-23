@@ -75,10 +75,10 @@ class MethodChannelFlutterScreenguard extends FlutterScreenguardPlatform {
       Color? color = Colors.black,
       Duration? timeAfterResume = const Duration(milliseconds: 1000),
       Alignment? alignment,
-      int? top,
-      int? left,
-      int? bottom,
-      int? right}) async {
+      double? top,
+      double? left,
+      double? bottom,
+      double? right}) async {
     final colorHex =
         '#${color?.value.toRadixString(16).padLeft(8, '0').substring(2)}';
     final align = alignments.indexWhere(

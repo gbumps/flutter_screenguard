@@ -5,13 +5,13 @@
 Pod::Spec.new do |s|
   s.name             = 'flutter_screenguard'
   s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.summary          = 'A Native screenshot blocking library for Flutter developer, with background customizable after captured. Screenshot detector are also supported.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+  A Native screenshot blocking library for Flutter developer, with background customizable after captured. Screenshot detector are also supported.
                        DESC
   s.homepage         = 'http://example.com'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'gbumps' => 'email@example.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'

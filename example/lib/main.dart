@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_screenguard/flutter_screenguard.dart';
+import 'package:flutter_screenguard/flutter_screenguard_screen_record_event.dart';
+import 'package:flutter_screenguard/flutter_screenguard_screenshot_event.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,24 +18,30 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late final FlutterScreenguard _flutterScreenguardPlugin;
+  late final FlutterScreenguardScreenshotEvent
+      _flutterScreenguardScreenshotListener;
+  late final FlutterScreenguardScreenRecordingEvent
+      _flutterScreenguardScreenRecordingEvent;
+
   late int selection;
 
   @override
   void initState() {
     super.initState();
     _flutterScreenguardPlugin = FlutterScreenguard();
+    _flutterScreenguardScreenshotListener = FlutterScreenguardScreenshotEvent();
+    _flutterScreenguardScreenshotListener.addListener(() {
+      //add listener when a screenshot is triggered
+      debugPrint('1234: screenshot detected!');
+    });
     selection = -1; // initPlatformState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    if (!mounted) return;
   }
 
   @override
   void dispose() {
     super.dispose();
     _flutterScreenguardPlugin.unregister();
+    _flutterScreenguardScreenshotListener.dispose();
   }
 
   @override
@@ -42,7 +49,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('Test screenguard'),
         ),
         body: Center(
           child: Column(
@@ -96,9 +103,9 @@ class _MyAppState extends State<MyApp> {
                   await _flutterScreenguardPlugin.registerWithImage(
                     uri:
                         'https://lh3.googleusercontent.com/blogger_img_proxy/AEn0k_uyWh3jBn3GEzf8AINr-3AoffbUXdml95nPjgjpu-amM4xjOi2L6fi6VmGcMHXLRuGXpklc3lXksPu1NKIOrzhbeHBgGVl3Fxi5f7sr8w5yGF-oTWXx-kJTrD8TTlRi96jPEXq4qzhtJd32hNtQ_F7J=w919-h516-p-k-no-nu',
-                    width: MediaQuery.of(context).size.width * (2/3),
-                    height: MediaQuery.of(context).size.height / 2,
-                    alignment: Alignment.center,
+                    width: 150,
+                    height: 300,
+                    alignment: Alignment.topCenter,
                     timeAfterResume: const Duration(milliseconds: 2000),
                     color: Colors.green,
                   );
