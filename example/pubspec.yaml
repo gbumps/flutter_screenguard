@@ -13,10 +13,17 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+scripts:
+  all: "rm -rf build && flutter clean && flutter pub get && flutter packages pub run build_runner build --delete-conflicting-outputs && cd ios && pod deintegrate && pod install && cd .."
+  gen: "flutter packages pub run build_runner build --delete-conflicting-outputs"
+  get: "flutter pub get"
+
 dependencies:
+  rps:
   flutter:
     sdk: flutter
 
+#  screenshot_callback: ^3.0.1
   flutter_screenguard:
     # When depending on this package from a real application you should use:
     #   flutter_screenguard: ^x.y.z
@@ -24,6 +31,7 @@ dependencies:
     # The example app is bundled with the plugin so we use a path dependency on
     # the parent directory to use the current plugin's version.
     path: ../
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
