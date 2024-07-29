@@ -17,6 +17,11 @@ typedef NS_ENUM(NSInteger, ScreenGuardImageAlignment) {
 
 NSString* _Nullable NSStringFromAlignment(ScreenGuardImageAlignment alignment);
 
+extern NSString * const REGISTER;
+extern NSString * const REGISTER_BLUR_VIEW;
+extern NSString * const REGISTER_IMAGE_VIEW;
+extern NSString * const UNREGISTER;
+
 @interface FlutterScreenguardPlugin : NSObject<FlutterPlugin>
 
 @property (nonatomic, strong) FlutterScreenguardScreenshotListener * _Nullable screenShotListener;

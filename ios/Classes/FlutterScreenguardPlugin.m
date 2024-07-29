@@ -12,6 +12,11 @@ FlutterScreenguardPlugin* instance;
 FlutterMethodChannel* eventChannelScreenRecording;
 FlutterMethodChannel* eventChannelScreenshot;
 
+NSString * const REGISTER = @"register";
+NSString * const REGISTER_BLUR_VIEW = @"registerWithBlurView";
+NSString * const REGISTER_IMAGE_VIEW = @"registerWithImage";
+NSString * const UNREGISTER = @"unregister";
+
 @implementation FlutterScreenguardPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   FlutterMethodChannel* channel = [FlutterMethodChannel
@@ -31,21 +36,20 @@ FlutterMethodChannel* eventChannelScreenshot;
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
     NSString *method = call.method;
-    
-    if ([method isEqualToString: @"register"]) {
+    if ([method isEqualToString: REGISTER]) {
         NSString *color = call.arguments[@"color"];
         dispatch_async(dispatch_get_main_queue(), ^{
             [self secureViewWithBackgroundColor: color];
         });
         result(@{@"status": @"success"});
-    } else if ([method isEqualToString: @"registerWithBlurView" ]) {
+    } else if ([method isEqualToString: REGISTER_BLUR_VIEW]) {
         NSNumber *radius = call.arguments[@"radius"];
         dispatch_async(dispatch_get_main_queue(), ^{
             [self secureViewWithBlurView: radius];
         });
         result(@{@"status": @"success"});
     
-    } else if ([method isEqualToString: @"registerWithImage"]) {
+    } else if ([method isEqualToString: REGISTER_IMAGE_VIEW]) {
         NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
         formatter.numberStyle = NSNumberFormatterDecimalStyle;
         
@@ -100,7 +104,7 @@ FlutterMethodChannel* eventChannelScreenshot;
              }
          });
         result(@{@"status": @"success"});
-    } else if ([method isEqualToString: @"unregister"]) {
+    } else if ([method isEqualToString: UNREGISTER]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self removeScreenShot];
         });

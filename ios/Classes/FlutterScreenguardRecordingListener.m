@@ -19,7 +19,7 @@ NSString * const DEACTIVATE_SCREEN_RECORDING_EVT = @"deactivateScreenRecordingEv
                                 object:nil
                                  queue:mainQueue
                             usingBlock:^(NSNotification *notification) {
-                [self.channel invokeMethod:@"onScreenRecordingCaptured" arguments:nil];
+                [self.channel invokeMethod:ON_SCREEN_RECORDING_EVT arguments:nil];
             }];
         
     }
