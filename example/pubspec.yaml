@@ -14,7 +14,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 scripts:
-  all: "rm -rf build && flutter clean && flutter pub get && flutter packages pub run build_runner build --delete-conflicting-outputs && cd ios && pod deintegrate && pod install && cd .."
+  all: "rm -rf build && flutter clean && flutter pub get && dart run build_runner build --delete-conflicting-outputs && cd ios && pod deintegrate && pod install && cd .."
   gen: "flutter packages pub run build_runner build --delete-conflicting-outputs"
   get: "flutter pub get"
 
@@ -36,6 +36,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
+  screenshot: ^3.0.0
 
 dev_dependencies:
   integration_test:

@@ -82,8 +82,8 @@ class MethodChannelFlutterScreenguard extends FlutterScreenguardPlatform {
     final colorHex =
         '#${color?.value.toRadixString(16).padLeft(8, '0').substring(2)}';
     final align = alignments.indexWhere(
-        (element) => element == alignment,
-      );
+      (element) => element == alignment,
+    );
     await methodChannel
         .invokeMethod<void>('registerWithImage', <String, dynamic>{
       'uri': uri,
@@ -115,10 +115,12 @@ class MethodChannelFlutterScreenguard extends FlutterScreenguardPlatform {
   @override
   Future<void> registerWithBlurView(
       {required num radius,
+      required String url,
       Duration? timeAfterResume = const Duration(milliseconds: 1000)}) async {
     await methodChannel
         .invokeMethod<void>('registerWithBlurView', <String, dynamic>{
       'radius': radius,
+      'url': url,
       'timeAfterResume': (timeAfterResume ?? const Duration(milliseconds: 1000))
           .inMilliseconds,
     });

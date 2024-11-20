@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -90,7 +89,7 @@ public class ScreenGuardColorActivity extends Activity {
         }
         overridePendingTransition(0, 0);
         IntentFilter intentFilter = new IntentFilter(SCREENGUARD_COLOR_ACTIVITY_CLOSE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= 33) {
             registerReceiver(closeReceiver, intentFilter, RECEIVER_NOT_EXPORTED);
         } else {
             registerReceiver(closeReceiver, intentFilter);
@@ -100,8 +99,8 @@ public class ScreenGuardColorActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(closeReceiver);
         doResumeByAction();
+        unregisterReceiver(closeReceiver);
         super.onDestroy();
     }
 
