@@ -16,6 +16,12 @@ NSString * const REGISTER = @"register";
 NSString * const REGISTER_BLUR_VIEW = @"registerWithBlurView";
 NSString * const REGISTER_IMAGE_VIEW = @"registerWithImage";
 NSString * const UNREGISTER = @"unregister";
+NSString * const REGISTER_SCREENSHOT_EVT = "registerScreenshotEventListener";
+NSString * const REGISTER_SCREEN_RECORD_EVT = "registerScreenRecordingEventListener";
+NSString * const ON_SCREEN_RECORDING_EVT = "onScreenRecordingCaptured";
+NSString * const UNREGISTER_SCREEN_RECORDING_EVT = "unregisterScreenRecordingEventListener";
+NSString * const ON_SCREENSHOT_EVT = "onScreenshotCaptured";
+NSString * const UNREGISTER_SCREENSHOT_EVT = "unregisterScreenshotEventListener";
 
 @implementation FlutterScreenguardPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {

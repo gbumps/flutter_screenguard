@@ -21,6 +21,12 @@ extern NSString * const REGISTER;
 extern NSString * const REGISTER_BLUR_VIEW;
 extern NSString * const REGISTER_IMAGE_VIEW;
 extern NSString * const UNREGISTER;
+extern NSString * const REGISTER_SCREENSHOT_EVT;
+extern NSString * const REGISTER_SCREEN_RECORD_EVT;
+extern NSString * const ON_SCREEN_RECORDING_EVT;
+extern NSString * const UNREGISTER_SCREEN_RECORDING_EVT;
+extern NSString * const ON_SCREENSHOT_EVT;
+extern NSString * const UNREGISTER_SCREENSHOT_EVT; 
 
 @interface FlutterScreenguardPlugin : NSObject<FlutterPlugin>
 
