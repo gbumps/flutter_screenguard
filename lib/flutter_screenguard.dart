@@ -1,16 +1,10 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:path/path.dart' as path;
-
-import 'dart:ui' as ui;
+import 'package:flutter_screenguard/flutter_screenguard_helper.dart';
 
 import 'flutter_screenguard_platform_interface.dart';
 
 class FlutterScreenguard {
-  late GlobalKey globalKey;
+  final GlobalKey globalKey;
 
   FlutterScreenguard({required this.globalKey});
 
@@ -64,10 +58,10 @@ class FlutterScreenguard {
     required num radius,
     Duration? timeAfterResume = const Duration(milliseconds: 1000),
   }) async {
-    final url = await _captureAsUiImage();
+    final url = await FlutterScreenguardHelper.captureAsUiImage(globalKey: globalKey);
     if (url != null) {
     return FlutterScreenguardPlatform.instance
-        .registerWithBlurView(radius: radius, timeAfterResume: timeAfterResume, url: url!);
+        .registerWithBlurView(radius: radius, timeAfterResume: timeAfterResume, url: url);
     }
   }
 
@@ -135,44 +129,4 @@ class FlutterScreenguard {
     return FlutterScreenguardPlatform.instance.unregister();
   }
 
-  Future<String?> _captureAsUiImage(
-      {double? pixelRatio = 1,
-      Duration delay = const Duration(milliseconds: 40)}) {
-    return Future.delayed(delay, () async {
-      try {
-        var findRenderObject = globalKey.currentContext?.findRenderObject();
-        if (findRenderObject == null) {
-          return null;
-        }
-        RenderRepaintBoundary boundary =
-            findRenderObject as RenderRepaintBoundary;
-        BuildContext? context = globalKey.currentContext;
-        if (pixelRatio == null) {
-          if (context != null) {
-            pixelRatio = pixelRatio ?? MediaQuery.of(context).devicePixelRatio;
-          }
-        }
-        ui.Image image = await boundary.toImage(pixelRatio: pixelRatio ?? 1);
-        ByteData? byteData =
-            await image.toByteData(format: ui.ImageByteFormat.png);
-        image.dispose();
-
-        Uint8List? pngBytes = byteData?.buffer.asUint8List();
-        if (pngBytes != null) {
-          final Directory cacheDir = await Directory.systemTemp.createTemp();
-          final String filePath = path.join(cacheDir.path,
-              'screenguard_${DateTime.now().millisecondsSinceEpoch}.png');
-
-          // Write the image data to the file
-          final File file = File(filePath);
-          await file.writeAsBytes(pngBytes);
-
-          return filePath;
-        }
-        return null;
-      } catch (e) {
-        return null;
-      }
-    });
-  }
 }

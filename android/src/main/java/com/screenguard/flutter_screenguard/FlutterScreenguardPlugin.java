@@ -1,36 +1,23 @@
 package com.screenguard.flutter_screenguard;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.PixelFormat;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.Settings;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.core.app.ActivityCompat;
 
 import com.screenguard.flutter_screenguard.helper.ScreenGuardHelper;
 import com.screenguard.flutter_screenguard.model.ScreenGuardBlurData;
 import com.screenguard.flutter_screenguard.model.ScreenGuardColorData;
 import com.screenguard.flutter_screenguard.model.ScreenGuardImageData;
 
-import java.util.Map;
 import java.util.Objects;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -53,8 +40,8 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
   private MethodChannel screenshotChannel;
   private MethodChannel screenRecordingChannel;
 
-  private WindowManager windowManager;
-  private View overlayView;
+  private ScreenGuardListener mScreenGuardScreenshotListener;
+  private ScreenGuardListener mScreenGuardScreenRecordingListener;
 
   private FlutterPluginBinding binding;
   private Activity currentActivity;
@@ -70,9 +57,9 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
   public static final String REGISTER_SCREEN_RECORD_EVT = "registerScreenRecordingEventListener";
   public static final String UNREGISTER = "unregister";
   public static final String ON_SCREEN_RECORDING_EVT = "onScreenRecordingCaptured";
-  public static final String DEACTIVATE_SCREEN_RECORDING_EVT = "deactivateScreenRecordingEventListener";
+  public static final String UNREGISTER_SCREEN_RECORDING_EVT = "unregisterScreenRecordingEventListener";
   public static final String ON_SCREENSHOT_EVT = "onScreenshotCaptured";
-  public static final String DEACTIVATE_SCREENSHOT_EVT = "deactivateScreenshotEventListener";
+  public static final String UNREGISTER_SCREENSHOT_EVT = "unregisterScreenshotEventListener";
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -162,6 +149,34 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
         result.success(FlutterScreenguardPlugin.class + ":" + REGISTER_BLUR_VIEW + " success");
         break;
       case REGISTER_IMAGE_VIEW:
+        timeAfterResume = Integer.parseInt(
+                Objects.requireNonNull(ScreenGuardHelper.getData(call, "timeAfterResume")).toString());
+
+        String uri = (String)
+                ScreenGuardHelper.getData(call,"uri");
+        color = (String)
+                ScreenGuardHelper.getData(call,"color");
+        double height = Double.parseDouble(
+                Objects.requireNonNull(ScreenGuardHelper.getData(call, "height")).toString()
+        );
+        double width = Double.parseDouble(
+                Objects.requireNonNull(ScreenGuardHelper.getData(call, "width")).toString()
+        );
+
+        int alignmentIndex = Integer.parseInt(
+                Objects.requireNonNull(ScreenGuardHelper.getData(call, "alignment")).toString());
+
+        currentActivity.runOnUiThread(() -> {
+            ScreenGuardImageData  data = new ScreenGuardImageData(
+                    color,
+                    uri,
+                    width,
+                    height,
+                    alignmentIndex,
+                    timeAfterResume
+            );
+            activateShieldWithImage(data);
+        });
         result.success(FlutterScreenguardPlugin.class + ":" + REGISTER_IMAGE_VIEW + " success");
         break;
       case REGISTER_WITHOUT_EFFECT:
@@ -175,16 +190,49 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
         deactivateShield();
         result.success(FlutterScreenguardPlugin.class + ":" + UNREGISTER + " success");
         break;
-      case DEACTIVATE_SCREEN_RECORDING_EVT:
+      case UNREGISTER_SCREEN_RECORDING_EVT:
+        if (mScreenGuardScreenRecordingListener != null) {
+          mScreenGuardScreenRecordingListener.unregister();
+          mScreenGuardScreenRecordingListener = null;
+        }
+
         result.success("deactivate screen recording success");
         break;
       case REGISTER_SCREENSHOT_EVT:
+        boolean isCaptureScreenshot =
+                Boolean.parseBoolean(
+                        Objects.requireNonNull(ScreenGuardHelper.getData(call,"isCaptureScreenshot")).toString()
+                );
+        registerScreenShotEventListener(isCaptureScreenshot);
         result.success(FlutterScreenguardPlugin.class + ":" + REGISTER_SCREENSHOT_EVT + " success");
         break;
-      case DEACTIVATE_SCREENSHOT_EVT:
+      case UNREGISTER_SCREENSHOT_EVT:
+        if (mScreenGuardScreenshotListener != null) {
+          mScreenGuardScreenshotListener.unregister();
+          mScreenGuardScreenshotListener = null;
+        }
         result.success("deactivate screenshot success");
         break;
     }
+  }
+  private void registerScreenRecordingEventListener() {
+    if (mScreenGuardScreenRecordingListener == null) {
+      mScreenGuardScreenRecordingListener  =
+              new ScreenGuardListener(currentContext, false, currentActivity, map -> {
+                screenRecordingChannel.invokeMethod(ON_SCREEN_RECORDING_EVT, map);
+              });
+    }
+    mScreenGuardScreenRecordingListener.register();
+  }
+
+  private void registerScreenShotEventListener(boolean isCaptureScreenshotFile) {
+    if (mScreenGuardScreenshotListener == null) {
+      mScreenGuardScreenshotListener =
+              new ScreenGuardListener(currentContext, isCaptureScreenshotFile, currentActivity, map -> {
+                screenshotChannel.invokeMethod(ON_SCREENSHOT_EVT, map);
+              });
+    }
+    mScreenGuardScreenshotListener.register();
   }
 
 
@@ -214,7 +262,7 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
 
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      Log.e(REGISTER_BLUR_VIEW, e.getMessage());
     }
   }
 
@@ -229,7 +277,7 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
             WindowManager.LayoutParams.FLAG_SECURE));
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      Log.e(REGISTER_WITHOUT_EFFECT, e.getMessage());
     }
   }
 
@@ -253,7 +301,7 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
           .getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE));
       mHandlerBlockScreenShot = null;
     } catch (Exception e) {
-      e.printStackTrace();
+      Log.e(UNREGISTER, e.getMessage());
     }
   }
 
@@ -281,7 +329,7 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      Log.e(REGISTER, e.getMessage());
     }
   }
 
@@ -313,33 +361,11 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
         }
       });
     } catch (Exception e) {
-//      e.printStackTrace();
+      Log.e(REGISTER_IMAGE_VIEW, e.getMessage());
     }
   }
 
   private void registerRecordingEvent() {
-    // if (mScreenGuard == null) {
-    // mScreenGuard = new ScreenGuard(
-    // currentReactContext,
-    // (url) -> currentReactContext.getJSModule(
-    // DeviceEventManagerModule.RCTDeviceEventEmitter.class
-    // ).emit(eventName, url)
-    // );
-    // }
-    // mScreenGuard.register();
-  }
-
-  private void registerScreenshotEvent() {
-    // if (mScreenGuard == null) {
-    // mScreenGuard = new ScreenGuard(
-    // currentReactContext,
-    // (url) -> currentReactContext.getJSModule(
-    // DeviceEventManagerModule.RCTDeviceEventEmitter.class
-    // ).emit(eventName, url)
-    // );
-    // }
-    // mScreenGuard.register();
-    // Keep: Required for RN built in Event Emitter Calls.
   }
 
 

@@ -30,7 +30,9 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _flutterScreenguardPlugin = FlutterScreenguard(globalKey: globalKey);
-    _flutterScreenguardScreenshotListener = FlutterScreenguardScreenshotEvent();
+    _flutterScreenguardScreenshotListener = FlutterScreenguardScreenshotEvent()..addListener((data) {
+      
+    },);
     _flutterScreenguardScreenRecordingEvent =
         FlutterScreenguardScreenRecordingEvent();
     selection = -1; // initPlatformState();
@@ -60,11 +62,11 @@ class _MyAppState extends State<MyApp> {
               children: [
                 InkWell(
                   onTap: () async {
-                    await _flutterScreenguardPlugin.register(
-                        color: Colors.green);
                     setState(() {
                       selection = 0;
                     });
+                    await _flutterScreenguardPlugin.register(
+                        color: Colors.red);
                   },
                   child: Text(
                     'Activate with color ',
@@ -103,18 +105,18 @@ class _MyAppState extends State<MyApp> {
                 ),
                 InkWell(
                   onTap: () async {
+                    setState(() {
+                      selection = 2;
+                    });
                     await _flutterScreenguardPlugin.registerWithImage(
                       uri:
-                          'https://lh3.googleusercontent.com/blogger_img_proxy/AEn0k_uyWh3jBn3GEzf8AINr-3AoffbUXdml95nPjgjpu-amM4xjOi2L6fi6VmGcMHXLRuGXpklc3lXksPu1NKIOrzhbeHBgGVl3Fxi5f7sr8w5yGF-oTWXx-kJTrD8TTlRi96jPEXq4qzhtJd32hNtQ_F7J=w919-h516-p-k-no-nu',
+                          'https://image.shutterstock.com/image-photo/red-mum-flower-photography-on-260nw-2533542589.jpg',
                       width: 150,
                       height: 300,
                       alignment: Alignment.topCenter,
                       timeAfterResume: const Duration(milliseconds: 2000),
                       color: Colors.green,
                     );
-                    setState(() {
-                      selection = 2;
-                    });
                   },
                   child: Text(
                     'Activate with image',
@@ -154,12 +156,6 @@ class _MyAppState extends State<MyApp> {
                     setState(() {
                       selection = 4;
                     });
-                    _flutterScreenguardScreenshotListener.addListener(
-                      () {
-                        debugPrint('1234: screenshot detected!');
-                      },
-                    );
-
                   },
                   child: Text(
                     'Activate screenshot listener',
@@ -174,7 +170,9 @@ class _MyAppState extends State<MyApp> {
                 const SizedBox(
                   height: 14,
                 ),
-                TextFormField(controller: textController,),
+                TextFormField(
+                  controller: textController,
+                ),
               ],
             ),
           ),

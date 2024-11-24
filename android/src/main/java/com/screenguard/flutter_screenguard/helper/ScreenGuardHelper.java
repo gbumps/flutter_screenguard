@@ -38,6 +38,15 @@ public class ScreenGuardHelper {
         }
     }
 
+    public static Bitmap captureView(View view) {
+        Bitmap bitmap = Bitmap.createBitmap(
+                view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        view.draw(canvas);
+        return bitmap;
+    }
+
     public static Object getData(MethodCall call, String key) {
         if (call.hasArgument(key)) {
             return call.argument(key);
