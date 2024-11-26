@@ -30,11 +30,12 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _flutterScreenguardPlugin = FlutterScreenguard(globalKey: globalKey);
-    _flutterScreenguardScreenshotListener = FlutterScreenguardScreenshotEvent()..addListener((data) {
-      
-    },);
+    _flutterScreenguardScreenshotListener = FlutterScreenguardScreenshotEvent();
     _flutterScreenguardScreenRecordingEvent =
-        FlutterScreenguardScreenRecordingEvent();
+        FlutterScreenguardScreenRecordingEvent()
+          ..addListener(
+            (data) {},
+          );
     selection = -1; // initPlatformState();
     textController = TextEditingController();
   }
@@ -65,8 +66,7 @@ class _MyAppState extends State<MyApp> {
                     setState(() {
                       selection = 0;
                     });
-                    await _flutterScreenguardPlugin.register(
-                        color: Colors.red);
+                    await _flutterScreenguardPlugin.register(color: Colors.red);
                   },
                   child: Text(
                     'Activate with color ',
@@ -156,6 +156,14 @@ class _MyAppState extends State<MyApp> {
                     setState(() {
                       selection = 4;
                     });
+                    _flutterScreenguardScreenshotListener.addListener(
+                      (data) {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (context) => const Text("captured"),
+                        );
+                      },
+                    );
                   },
                   child: Text(
                     'Activate screenshot listener',

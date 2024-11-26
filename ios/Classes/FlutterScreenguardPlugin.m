@@ -16,12 +16,6 @@ NSString * const REGISTER = @"register";
 NSString * const REGISTER_BLUR_VIEW = @"registerWithBlurView";
 NSString * const REGISTER_IMAGE_VIEW = @"registerWithImage";
 NSString * const UNREGISTER = @"unregister";
-NSString * const REGISTER_SCREENSHOT_EVT = "registerScreenshotEventListener";
-NSString * const REGISTER_SCREEN_RECORD_EVT = "registerScreenRecordingEventListener";
-NSString * const ON_SCREEN_RECORDING_EVT = "onScreenRecordingCaptured";
-NSString * const UNREGISTER_SCREEN_RECORDING_EVT = "unregisterScreenRecordingEventListener";
-NSString * const ON_SCREENSHOT_EVT = "onScreenshotCaptured";
-NSString * const UNREGISTER_SCREENSHOT_EVT = "unregisterScreenshotEventListener";
 
 @implementation FlutterScreenguardPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
@@ -103,7 +97,7 @@ NSString * const UNREGISTER_SCREENSHOT_EVT = "unregisterScreenshotEventListener"
             result(@{@"status": @"success"});
         }
     }
-     else if ([method isEqualToString: REGISTER_SCREEN_RECORDING_EVT]) {
+     else if ([method isEqualToString: REGISTER_SCREEN_RECORD_EVT]) {
          dispatch_async(dispatch_get_main_queue(), ^{
              if (instance.screenRecordingListener == nil) {
                  instance.screenRecordingListener = [[FlutterScreenguardRecordingListener alloc] initWithChannel: eventChannelScreenRecording];
@@ -115,7 +109,7 @@ NSString * const UNREGISTER_SCREENSHOT_EVT = "unregisterScreenshotEventListener"
             [self removeScreenShot];
         });
         result(@{@"status": @"success"});
-    } else if ([method isEqualToString: DEACTIVATE_SCREEN_RECORDING_EVT]) {
+    } else if ([method isEqualToString: UNREGISTER_SCREEN_RECORDING_EVT]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (instance.screenRecordingListener != nil) {
                 [instance.screenRecordingListener stopListening];
@@ -130,7 +124,7 @@ NSString * const UNREGISTER_SCREENSHOT_EVT = "unregisterScreenshotEventListener"
             }
         });
         result(@{@"status": @"success"});
-    } else if ([method isEqualToString: DEACTIVATE_SCREENSHOT_EVT]) {
+    } else if ([method isEqualToString: UNREGISTER_SCREENSHOT_EVT]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (instance.screenShotListener != nil) {
                 [instance.screenShotListener stopListening];

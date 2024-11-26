@@ -1,8 +1,8 @@
 #import "FlutterScreenguardScreenshotListener.h"
 
-NSString * const ON_SCREENSHOT_EVT = @"onScreenshotCaptured";
 NSString * const REGISTER_SCREENSHOT_EVT = @"registerScreenshotEventListener";
-NSString * const DEACTIVATE_SCREENSHOT_EVT = @"deactivateScreenshotEventListener";
+NSString * const ON_SCREENSHOT_EVT = @"onScreenshotCaptured";
+NSString * const UNREGISTER_SCREENSHOT_EVT = @"unregisterScreenshotEventListener";
 
 @implementation FlutterScreenguardScreenshotListener
 

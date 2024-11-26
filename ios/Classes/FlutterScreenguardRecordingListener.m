@@ -1,8 +1,8 @@
 #import "FlutterScreenguardRecordingListener.h"
 
+NSString * const REGISTER_SCREEN_RECORD_EVT = @"registerScreenRecordingEventListener";
 NSString * const ON_SCREEN_RECORDING_EVT = @"onScreenRecordingCaptured";
-NSString * const REGISTER_SCREEN_RECORDING_EVT = @"registerScreenshotEventListener";
-NSString * const DEACTIVATE_SCREEN_RECORDING_EVT = @"deactivateScreenRecordingEventListener";
+NSString * const UNREGISTER_SCREEN_RECORDING_EVT = @"unregisterScreenRecordingEventListener";
 
 @implementation FlutterScreenguardRecordingListener
 
@@ -28,6 +28,11 @@ NSString * const DEACTIVATE_SCREEN_RECORDING_EVT = @"deactivateScreenRecordingEv
 
 - (void)stopListening {
     // Stop listening to events
+    NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+    NSOperationQueue *mainQueue = [NSOperationQueue mainQueue];
+    [center removeObserver:self
+                      name:UIScreenCapturedDidChangeNotification
+                    object:nil];
 }
 
 @end
