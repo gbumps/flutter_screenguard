@@ -30,11 +30,13 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _flutterScreenguardPlugin = FlutterScreenguard(globalKey: globalKey);
-    _flutterScreenguardScreenshotListener = FlutterScreenguardScreenshotEvent();
+    _flutterScreenguardScreenshotListener =
+        FlutterScreenguardScreenshotEvent(getScreenshotData: false)
+          ..initialize();
     _flutterScreenguardScreenRecordingEvent =
         FlutterScreenguardScreenRecordingEvent()
           ..addListener(
-            (data) {},
+            () {},
           );
     selection = -1; // initPlatformState();
     textController = TextEditingController();
@@ -157,11 +159,10 @@ class _MyAppState extends State<MyApp> {
                       selection = 4;
                     });
                     _flutterScreenguardScreenshotListener.addListener(
-                      (data) {
-                        showModalBottomSheet(
-                          context: context,
-                          builder: (context) => const Text("captured"),
-                        );
+                      () {
+                        FileCaptureDetail? d =
+                            _flutterScreenguardScreenshotListener.value;
+                        debugPrint(d.toString());
                       },
                     );
                   },
@@ -171,6 +172,26 @@ class _MyAppState extends State<MyApp> {
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: selection == 4 ? Colors.green : Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 14,
+                ),
+                InkWell(
+                  onTap: () async {
+                    setState(() {
+                      selection = 5;
+                    });
+                    _flutterScreenguardScreenshotListener.dispose();
+                  },
+                  child: Text(
+                    'deactivate screenshot listener',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: selection == 5 ? Colors.green : Colors.black,
                       fontSize: 16,
                     ),
                   ),

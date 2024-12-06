@@ -201,7 +201,7 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
       case REGISTER_SCREENSHOT_EVT:
         boolean isCaptureScreenshot =
                 Boolean.parseBoolean(
-                        Objects.requireNonNull(ScreenGuardHelper.getData(call,"isCaptureScreenshot")).toString()
+                        Objects.requireNonNull(ScreenGuardHelper.getData(call,"getScreenshotData")).toString()
                 );
         registerScreenShotEventListener(isCaptureScreenshot);
         result.success(FlutterScreenguardPlugin.class + ":" + REGISTER_SCREENSHOT_EVT + " success");

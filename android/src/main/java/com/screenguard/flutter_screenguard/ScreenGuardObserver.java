@@ -6,6 +6,7 @@ import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 
 import com.screenguard.flutter_screenguard.helper.ScreenGuardHelper;
@@ -50,26 +51,27 @@ public class ScreenGuardObserver extends ContentObserver {
     @Override
     public void onChange(boolean selfChange, Uri uri) {
         super.onChange(selfChange, uri);
-        Map<String, Object> map = Collections.emptyMap();
-        if (mCurrentActivity!= null && getScreenShotPath) {
-            final View currentView =
-                    mCurrentActivity.getWindow().getDecorView().getRootView();
-            Bitmap bitmap = ScreenGuardHelper.captureView(currentView);
+        try {
+            Map<String, Object> map = Collections.emptyMap();
+            if (mCurrentActivity!= null && getScreenShotPath) {
+                final View currentView =
+                        mCurrentActivity.getWindow().getDecorView().getRootView();
+                Bitmap bitmap = ScreenGuardHelper.captureView(currentView);
 
-            String url = ScreenGuardHelper.saveBitmapToFile(mContext, bitmap);
+                String url = ScreenGuardHelper.saveBitmapToFile(mContext, bitmap);
 
-            if (url != null && !url.isEmpty()) {
-                String fileType = url.substring(url.lastIndexOf(".") + 1);
-                String name = url.substring(url.lastIndexOf("/") + 1);
-                map.put("type", fileType);
-                map.put("name", name);
+                if (url != null && !url.isEmpty()) {
+                    String fileType = url.substring(url.lastIndexOf(".") + 1);
+                    String name = url.substring(url.lastIndexOf("/") + 1);
+                    map.put("type", fileType);
+                    map.put("name", name);
+                }
+                map.put("path", url);
             }
-            map.put("path", url);
-        } else {
-            map.put("type", "");
-            map.put("name", "");
-            map.put("path", "");
+            new Handler(Looper.getMainLooper()).post(() -> mListener.onSnap(map));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        mCurrentHandler.post(() -> mListener.onSnap(map));
+
     }
 }

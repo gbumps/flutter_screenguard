@@ -9,7 +9,7 @@ extern NSString * const UNREGISTER_SCREENSHOT_EVT;
 
 @property (nonatomic, strong) FlutterMethodChannel *channel;
 
-- (instancetype)initWithChannel:(FlutterMethodChannel *)channel;
+- (instancetype)initWithChannel:(FlutterMethodChannel *)channel getScreenshotData:(BOOL) getScreenshotData;
 - (void)stopListening;
 
 @end

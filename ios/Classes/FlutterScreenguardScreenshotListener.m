@@ -6,7 +6,7 @@ NSString * const UNREGISTER_SCREENSHOT_EVT = @"unregisterScreenshotEventListener
 
 @implementation FlutterScreenguardScreenshotListener
 
-- (instancetype)initWithChannel:(FlutterMethodChannel *)channel {
+- (instancetype)initWithChannel:(FlutterMethodChannel *)channel getScreenshotData:(BOOL) getScreenshotData {
     self = [super init];
     if (self) {
         _channel = channel;
@@ -19,7 +19,7 @@ NSString * const UNREGISTER_SCREENSHOT_EVT = @"unregisterScreenshotEventListener
                                 object:nil
                                  queue:mainQueue
                             usingBlock:^(NSNotification *notification) {
-            if (true) {
+            if (getScreenshotData) {
               UIViewController *rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;
               UIImage *image = [self convertViewToImage:rootViewController.view.superview];
               NSData *data = UIImagePNGRepresentation(image);
@@ -45,7 +45,7 @@ NSString * const UNREGISTER_SCREENSHOT_EVT = @"unregisterScreenshotEventListener
             } else {
                 [self.channel invokeMethod:ON_SCREENSHOT_EVT arguments:nil];
             }
-            }];
+          }];
     }
     return self;
 }

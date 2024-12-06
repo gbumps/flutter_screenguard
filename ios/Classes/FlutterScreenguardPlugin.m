@@ -119,8 +119,12 @@ NSString * const UNREGISTER = @"unregister";
         result(@"disposed screen recording");
     } else if ([method isEqualToString: REGISTER_SCREENSHOT_EVT]) {
         dispatch_async(dispatch_get_main_queue(), ^{
+            NSString *data = call.arguments[@"getScreenshotData"];
+            BOOL boolValue = [data boolValue];
             if (instance.screenShotListener == nil) {
-                instance.screenShotListener = [[FlutterScreenguardScreenshotListener alloc] initWithChannel: eventChannelScreenshot];
+                instance.screenShotListener = [
+                    [FlutterScreenguardScreenshotListener alloc] initWithChannel: eventChannelScreenshot getScreenshotData:boolValue
+                ];
             }
         });
         result(@{@"status": @"success"});

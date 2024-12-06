@@ -1,10 +1,11 @@
 // ignore_for_file: constant_identifier_names
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
-typedef EventCallback = void Function(Map<String, dynamic>? data);
-
-class FlutterScreenguardScreenRecordingEvent {
+class FlutterScreenguardScreenRecordingEvent
+    extends ValueNotifier<String?> {
   static const MethodChannel _channel =
       MethodChannel('flutter_screenguard_screen_recording_event');
 
@@ -12,12 +13,9 @@ class FlutterScreenguardScreenRecordingEvent {
       'registerScreenRecordingEventListener';
   static const UNREGISTER_SCREEN_RECORDING_EVT_LISTENER =
       'unregisterScreenRecordingEventListener';
+  static const ON_SCREEN_RECORDING_CAPTURED = 'onScreenRecordingCaptured';
 
-  EventCallback? _callback;
-
-  FlutterScreenguardScreenRecordingEvent() {
-    initialize();
-  }
+  FlutterScreenguardScreenRecordingEvent() : super('');
 
   Future<void> initialize() async {
     _channel.setMethodCallHandler(_handleMethodCall);
@@ -25,21 +23,14 @@ class FlutterScreenguardScreenRecordingEvent {
   }
 
   Future<void> _handleMethodCall(MethodCall call) async {
-    if (call.method == 'onScreenRecordingCaptured') {
-      _callback?.call(call.arguments);
+    if (call.method == ON_SCREEN_RECORDING_CAPTURED) {
+      value = 'screen recording';
     }
   }
 
-  void addListener(EventCallback callback) {
-    _callback = callback;
-  }
-
+  @override
   void dispose() {
-    _callback = null;
-    _stopListening();
-  }
-
-  void _stopListening() {
+    super.dispose();
     _channel.invokeMethod(UNREGISTER_SCREEN_RECORDING_EVT_LISTENER);
   }
 }

@@ -27,7 +27,6 @@ NSString * const UNREGISTER_SCREEN_RECORDING_EVT = @"unregisterScreenRecordingEv
 }
 
 - (void)stopListening {
-    // Stop listening to events
     NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
     NSOperationQueue *mainQueue = [NSOperationQueue mainQueue];
     [center removeObserver:self
