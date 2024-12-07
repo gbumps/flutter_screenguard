@@ -4,11 +4,13 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
@@ -137,10 +139,15 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
         timeAfterResume = Integer.parseInt(
                 Objects.requireNonNull(ScreenGuardHelper.getData(call, "timeAfterResume")).toString());
         currentActivity.runOnUiThread(() -> {
-            String localPath = Objects.requireNonNull(ScreenGuardHelper.getData(call, "url")).toString();
+          final View currentView =
+                  currentActivity.getWindow().getDecorView().getRootView();
+          Bitmap bitmap = ScreenGuardHelper.captureView(currentView);
+
+          String url = ScreenGuardHelper.saveBitmapToFile(currentContext, bitmap);
+
             ScreenGuardBlurData data = new ScreenGuardBlurData(
                     radius,
-                    localPath,
+                    url,
                     timeAfterResume
             );
             activateShieldWithBlurView(data);
