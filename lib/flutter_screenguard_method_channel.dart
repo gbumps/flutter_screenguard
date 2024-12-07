@@ -115,12 +115,10 @@ class MethodChannelFlutterScreenguard extends FlutterScreenguardPlatform {
   @override
   Future<void> registerWithBlurView(
       {required num radius,
-      required String url,
       Duration? timeAfterResume = const Duration(milliseconds: 1000)}) async {
     await methodChannel
         .invokeMethod<void>('registerWithBlurView', <String, dynamic>{
       'radius': radius,
-      'url': url,
       'timeAfterResume': (timeAfterResume ?? const Duration(milliseconds: 1000))
           .inMilliseconds,
     });

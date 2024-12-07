@@ -58,7 +58,6 @@ abstract class FlutterScreenguardPlatform extends PlatformInterface {
   /// (e.g. lack of relevant hardware).
   Future<void> registerWithBlurView({
     required num radius,
-    required String url,
     Duration? timeAfterResume = const Duration(milliseconds: 1000),
   }) {
     throw UnimplementedError(

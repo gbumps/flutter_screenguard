@@ -24,7 +24,7 @@ class FlutterScreenguardScreenRecordingEvent
 
   Future<void> _handleMethodCall(MethodCall call) async {
     if (call.method == ON_SCREEN_RECORDING_CAPTURED) {
-      value = 'screen recording';
+      value = 'Screen record running';
     }
   }
 

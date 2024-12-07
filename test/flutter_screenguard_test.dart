@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_screenguard/flutter_screenguard.dart';
@@ -38,17 +37,18 @@ class MockFlutterScreenguardPlatform
   }
 
   @override
-  Future<void> registerWithImage(
-      {required String uri,
-      required num width,
-      required num height,
-      Color? color = Colors.black,
-      Duration? timeAfterResume = const Duration(milliseconds: 1000),
-      Alignment? alignment = Alignment.center,
-      int? top,
-      int? left,
-      int? bottom,
-      int? right}) {
+  Future<void> registerWithImage({
+    required String uri,
+    required double width,
+    required double height,
+    Color? color = Colors.black,
+    Duration? timeAfterResume = const Duration(milliseconds: 1000),
+    Alignment? alignment,
+    double? top,
+    double? left,
+    double? bottom,
+    double? right,
+  }) {
     throw UnimplementedError();
   }
 

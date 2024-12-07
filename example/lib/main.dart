@@ -29,7 +29,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _flutterScreenguardPlugin = FlutterScreenguard(globalKey: globalKey);
+    _flutterScreenguardPlugin = FlutterScreenguard();
     _flutterScreenguardScreenshotListener =
         FlutterScreenguardScreenshotEvent(getScreenshotData: false)
           ..initialize();

@@ -4,9 +4,7 @@ import 'package:flutter_screenguard/flutter_screenguard_helper.dart';
 import 'flutter_screenguard_platform_interface.dart';
 
 class FlutterScreenguard {
-  final GlobalKey globalKey;
-
-  FlutterScreenguard({required this.globalKey});
+  FlutterScreenguard();
 
   /// activate a screenshot blocking with a color effect view (iOS 13+, Android 8+)
   /// [color] color of the background
@@ -58,11 +56,10 @@ class FlutterScreenguard {
     required num radius,
     Duration? timeAfterResume = const Duration(milliseconds: 1000),
   }) async {
-    final url = await FlutterScreenguardHelper.captureAsUiImage(globalKey: globalKey);
-    if (url != null) {
-    return FlutterScreenguardPlatform.instance
-        .registerWithBlurView(radius: radius, timeAfterResume: timeAfterResume, url: url);
-    }
+    return FlutterScreenguardPlatform.instance.registerWithBlurView(
+      radius: radius,
+      timeAfterResume: timeAfterResume,
+    );
   }
 
   /// [iOS 13+, Android 8+] activate a screenshot blocking with an image effect view
@@ -111,6 +108,9 @@ class FlutterScreenguard {
     );
   }
 
+   /// [Android 8+](Android only) activate a screenshot blocking without any effect
+  /// (image, color, blur)
+  /// Throws a [PlatformException] if there were technical problems on native side
   Future<void> registerWithoutEffect() {
     return FlutterScreenguardPlatform.instance.registerWithoutEffect();
   }
@@ -128,5 +128,4 @@ class FlutterScreenguard {
   Future<void> unregister() {
     return FlutterScreenguardPlatform.instance.unregister();
   }
-
 }

@@ -17,7 +17,7 @@ void main() {
   final GlobalKey globalKey = GlobalKey();
 
   testWidgets('getPlatformVersion test', (WidgetTester tester) async {
-    final FlutterScreenguard plugin = FlutterScreenguard(globalKey: globalKey);
+    final FlutterScreenguard plugin = FlutterScreenguard();
     // final String? version = await plugin.getPlatformVersion();
     // The version string depends on the host platform running the test, so
     // just assert that some non-empty string is returned.
