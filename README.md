@@ -2,7 +2,7 @@
 
 A Native screenshot blocking library for Flutter developer, with background customizable after captured. Screenshot detector are also supported.
 
-(Take inspiration from my own react-native-screenguard library)
+(Forked from my own [react-native-screenguard](https://github.com/gbumps/react-native-screenguard) library)
 
 ## Getting Started
 
