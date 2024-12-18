@@ -29,7 +29,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _flutterScreenguardPlugin = FlutterScreenguard();
+    _flutterScreenguardPlugin = FlutterScreenguard(globalKey: globalKey);
     _flutterScreenguardScreenshotListener =
         FlutterScreenguardScreenshotEvent(getScreenshotData: false)
           ..initialize();
@@ -86,7 +86,7 @@ class _MyAppState extends State<MyApp> {
                 InkWell(
                   onTap: () async {
                     await _flutterScreenguardPlugin.registerWithBlurView(
-                        radius: 18,
+                        radius: 6,
                         timeAfterResume: const Duration(milliseconds: 2000));
                     setState(() {
                       selection = 1;
@@ -162,7 +162,15 @@ class _MyAppState extends State<MyApp> {
                       () {
                         FileCaptureDetail? d =
                             _flutterScreenguardScreenshotListener.value;
-                        debugPrint(d.toString());
+                        debugPrint(
+                          'path: ${d?.path}',
+                        );
+                        debugPrint(
+                          'name: ${d?.name}',
+                        );
+                        debugPrint(
+                          'type: ${d?.type}',
+                        );
                       },
                     );
                   },
