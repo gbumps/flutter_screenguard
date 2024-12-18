@@ -1,17 +1,75 @@
 # flutter_screenguard
 
-A Native screenshot blocking library for Flutter developer, with background customizable after captured. Screenshot detector are also supported.
+A Native screenshot blocking plugin for Flutter developer, with background customizable after captured. Screenshot detector are also supported.
 
-(Forked from my own [react-native-screenguard](https://github.com/gbumps/react-native-screenguard) library)
+## Requirements
 
-## Getting Started
+- Flutter >=3.7.0
+- Dart >=3.4.0 <4.0.0
+- iOS >=12.0
+- Android compileSDK 34
+- Java 17
+- Android Gradle Plugin >=8.3.0
+- Gradle wrapper >=7.6
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.dev/developing-packages/),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
+## Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+To use this plugin, add `flutter_screenguard` as a dependency in your `pubspec.yaml` file
+
+```
+dependencies:
+   flutter_screenguard: ^1.0.0
+```
+
+Or you can run this command to install it from the flutter pub.
+
+```shell
+flutter pub add flutter_screenguard
+```
+
+## Usage
+
+import the plugin as follow
+
+```dart
+import 'package:flutter_screenguard/flutter_screenguard.dart';
+```
+
+then, create an instance of `FlutterScreenguard` as such 
+
+```dart
+import 'package:flutter_screenguard/flutter_screenguard.dart';
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  late final FlutterScreenguard _flutterScreenguardPlugin;
+  
+  @override
+  void initState() {
+    super.initState();
+    _flutterScreenguardPlugin = FlutterScreenguard();
+  }
+}
+```
+
+### register
+
+Activate the screenguard with your custom background color layout.
+
+
+```dart
+_flutterScreenguardPlugin.register(color: "#FFF", timeAfterResume: Timer);
+```
+
+
+
+
+
 
