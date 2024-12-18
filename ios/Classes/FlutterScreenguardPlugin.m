@@ -44,8 +44,9 @@ NSString * const UNREGISTER = @"unregister";
         result(@{@"status": @"success"});
     } else if ([method isEqualToString: REGISTER_BLUR_VIEW]) {
         NSNumber *radius = call.arguments[@"radius"];
+        NSString *localImagePath = call.arguments[@"localImagePath"];
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self secureViewWithBlurView: radius];
+            [self secureViewWithBlurView: radius imagePath: localImagePath];
         });
         result(@{@"status": @"success"});
     
@@ -149,7 +150,7 @@ NSString * const UNREGISTER = @"unregister";
   } else return;
 }
 
-- (void)secureViewWithBlurView: (nonnull NSNumber *)radius {
+- (void)secureViewWithBlurView: (nonnull NSNumber *)radius imagePath:(NSString *) imagePath {
   if (@available(iOS 13.0, *)) {
     if (textField == nil) {
       [self initTextField];
@@ -157,21 +158,21 @@ NSString * const UNREGISTER = @"unregister";
       
     [textField setBackgroundColor: [UIColor clearColor]];
     [textField setSecureTextEntry: TRUE];
-    UIViewController *rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;
-//    UIViewController *presentedViewController = [self topViewController:rootViewController];
-    UIImage *imageView = [self convertViewToImage:rootViewController.view.superview];
-    CIImage *inputImage = [CIImage imageWithCGImage:imageView.CGImage];
-    
-    CIContext *context = [CIContext contextWithOptions:nil];
-    
+      
+    UIImage *image = [UIImage imageWithContentsOfFile:imagePath];
+    CIImage *ciImage = [[CIImage alloc] initWithImage:image];
+          
     CIFilter *blurFilter = [CIFilter filterWithName:@"CIGaussianBlur"];
-    [blurFilter setValue:inputImage forKey:kCIInputImageKey];
+    [blurFilter setValue:ciImage forKey:kCIInputImageKey];
     [blurFilter setValue:radius forKey:kCIInputRadiusKey];
           
-    CIImage *outputImage = [blurFilter valueForKey:kCIOutputImageKey];
+    CIImage *outputCIImage = [blurFilter outputImage];
           
-    CGImageRef cgImage = [context createCGImage:outputImage fromRect:[outputImage extent]];
-    
+    CIContext *context = [CIContext contextWithOptions:nil];
+          
+    CGRect extent = [outputCIImage extent];
+    CGImageRef cgImage = [context createCGImage:outputCIImage fromRect:extent];
+          
     UIImage *blurredImage = [UIImage imageWithCGImage:cgImage];
           
     CGImageRelease(cgImage);
@@ -182,7 +183,6 @@ NSString * const UNREGISTER = @"unregister";
 }
 
 - (void)secureViewWithImageAlignment:(nonnull NSString *)source
-//                  withDefaultSource:(nullable NSDictionary *)defaultSource
                           withWidth:(nonnull NSNumber *)width
                          withHeight:(nonnull NSNumber *)height
                       withAlignment:(ScreenGuardImageAlignment)alignment

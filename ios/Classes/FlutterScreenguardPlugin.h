@@ -17,10 +17,10 @@ typedef NS_ENUM(NSInteger, ScreenGuardImageAlignment) {
 
 NSString* _Nullable NSStringFromAlignment(ScreenGuardImageAlignment alignment);
 
-extern NSString * const REGISTER;
-extern NSString * const REGISTER_BLUR_VIEW;
-extern NSString * const REGISTER_IMAGE_VIEW;
-extern NSString * const UNREGISTER;
+extern NSString * _Nonnull const REGISTER;
+extern NSString * _Nonnull const REGISTER_BLUR_VIEW;
+extern NSString * _Nonnull const REGISTER_IMAGE_VIEW;
+extern NSString * _Nonnull const UNREGISTER;
 
 @interface FlutterScreenguardPlugin : NSObject<FlutterPlugin>
 
@@ -28,7 +28,7 @@ extern NSString * const UNREGISTER;
 @property (nonatomic, strong) FlutterScreenguardRecordingListener * _Nullable screenRecordingListener;
 
 - (void)secureViewWithBackgroundColor: (NSString *_Nonnull)color;
-- (void)secureViewWithBlurView: (nonnull NSNumber *)radius;
+- (void)secureViewWithBlurView: (nonnull NSNumber *)radius imagePath:(NSString *_Nonnull) imagePath;
 - (void)secureViewWithImage: (nonnull NSDictionary *) source
           withDefaultSource: (nullable NSDictionary *) defaultSource
                   withWidth: (nonnull NSNumber *) width

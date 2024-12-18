@@ -139,15 +139,10 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
         timeAfterResume = Integer.parseInt(
                 Objects.requireNonNull(ScreenGuardHelper.getData(call, "timeAfterResume")).toString());
         currentActivity.runOnUiThread(() -> {
-          final View currentView =
-                  currentActivity.getWindow().getDecorView().getRootView();
-          Bitmap bitmap = ScreenGuardHelper.captureView(currentView);
-
-          String url = ScreenGuardHelper.saveBitmapToFile(currentContext, bitmap);
-
+          String localPath = Objects.requireNonNull(ScreenGuardHelper.getData(call, "localImagePath")).toString();
             ScreenGuardBlurData data = new ScreenGuardBlurData(
                     radius,
-                    url,
+                    localPath,
                     timeAfterResume
             );
             activateShieldWithBlurView(data);
@@ -255,11 +250,9 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
       if (currentActivity.getClass() == ScreenGuardColorActivity.class) {
         deactivateShield();
       }
-      if (mHandlerBlockScreenShot != null) {
-        mHandlerBlockScreenShot.post(() -> currentActivity.getWindow().setFlags(
-            WindowManager.LayoutParams.FLAG_SECURE,
-            WindowManager.LayoutParams.FLAG_SECURE));
-      }
+      mHandlerBlockScreenShot.post(() -> currentActivity.getWindow().setFlags(
+          WindowManager.LayoutParams.FLAG_SECURE,
+          WindowManager.LayoutParams.FLAG_SECURE));
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         Intent intent = new Intent(
             currentActivity,
@@ -278,11 +271,9 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
       if (mHandlerBlockScreenShot == null) {
         mHandlerBlockScreenShot = new Handler(Looper.getMainLooper());
       }
-      if (currentActivity != null) {
         mHandlerBlockScreenShot.post(() -> currentActivity.getWindow().setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE));
-      }
     } catch (Exception e) {
       Log.e(REGISTER_WITHOUT_EFFECT, e.getMessage());
     }
@@ -296,17 +287,18 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
       if (currentActivity == null) {
           throw new NullPointerException("Current Activity is null!");
       }
+        mHandlerBlockScreenShot.postDelayed(() -> currentActivity
+                .getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE), 400);
+
+        mHandlerBlockScreenShot = null;
       if (Build.VERSION.SDK_INT >= 33) {
-        if (currentActivity.getLocalClassName().equals(ScreenGuardColorActivity.class.getName())) {
+        if (currentActivity instanceof ScreenGuardColorActivity) {
           currentActivity.finish();
         }
       } else {
         currentContext.sendBroadcast(
           new Intent(ScreenGuardColorActivity.SCREENGUARD_COLOR_ACTIVITY_CLOSE));
       }
-      mHandlerBlockScreenShot.post(() -> currentActivity
-          .getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE));
-      mHandlerBlockScreenShot = null;
     } catch (Exception e) {
       Log.e(UNREGISTER, e.getMessage());
     }
@@ -352,11 +344,9 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
       if (currentActivity.getClass() == ScreenGuardColorActivity.class) {
         deactivateShield();
       }
-      if (mHandlerBlockScreenShot != null) {
-        mHandlerBlockScreenShot.post(() -> currentActivity.getWindow().setFlags(
-            WindowManager.LayoutParams.FLAG_SECURE,
-            WindowManager.LayoutParams.FLAG_SECURE));
-      }
+      mHandlerBlockScreenShot.post(() -> currentActivity.getWindow().setFlags(
+          WindowManager.LayoutParams.FLAG_SECURE,
+          WindowManager.LayoutParams.FLAG_SECURE));
       currentActivity.runOnUiThread(() -> {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
           Intent intent = new Intent(

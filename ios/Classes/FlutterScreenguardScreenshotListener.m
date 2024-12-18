@@ -43,7 +43,8 @@ NSString * const UNREGISTER_SCREENSHOT_EVT = @"unregisterScreenshotEventListener
                 [self.channel invokeMethod:ON_SCREENSHOT_EVT arguments:result];
 
             } else {
-                [self.channel invokeMethod:ON_SCREENSHOT_EVT arguments:nil];
+                NSDictionary *result = @{@"path": @"", @"name": @"", @"type": @""};
+                [self.channel invokeMethod:ON_SCREENSHOT_EVT arguments:result];
             }
           }];
     }
