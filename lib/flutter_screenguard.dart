@@ -4,7 +4,9 @@ import 'package:flutter_screenguard/flutter_screenguard_helper.dart';
 import 'flutter_screenguard_platform_interface.dart';
 
 class FlutterScreenguard {
-  FlutterScreenguard();
+  GlobalKey? globalKey;
+
+  FlutterScreenguard({this.globalKey});
 
   /// activate a screenshot blocking with a color effect view (iOS 13+, Android 8+)
   /// [color] color of the background
@@ -50,16 +52,23 @@ class FlutterScreenguard {
   /// users have to wait for the application to turn off the filter before going back
   /// to the main view, which is a very bad user experiences.
   ///
+  /// function will throw an exception if globalKey is not initialized
+  ///
   /// Throws a [PlatformException] if there were technical problems on native side
-  /// (e.g. lack of relevant hardware).
   Future<void> registerWithBlurView({
     required num radius,
     Duration? timeAfterResume = const Duration(milliseconds: 1000),
   }) async {
-    return FlutterScreenguardPlatform.instance.registerWithBlurView(
-      radius: radius,
-      timeAfterResume: timeAfterResume,
-    );
+    assert(globalKey != null);
+    final url =
+        await FlutterScreenguardHelper.captureAsUiImage(globalKey: globalKey!);
+    if (url != null) {
+      return FlutterScreenguardPlatform.instance.registerWithBlurView(
+        radius: radius,
+        timeAfterResume: timeAfterResume,
+        localImagePath: url,
+      );
+    }
   }
 
   /// [iOS 13+, Android 8+] activate a screenshot blocking with an image effect view
@@ -108,23 +117,35 @@ class FlutterScreenguard {
     );
   }
 
-   /// [Android 8+](Android only) activate a screenshot blocking without any effect
+  /// [Android 8+](Android only) activate a screenshot blocking without any effect
   /// (image, color, blur)
   /// Throws a [PlatformException] if there were technical problems on native side
   Future<void> registerWithoutEffect() {
     return FlutterScreenguardPlatform.instance.registerWithoutEffect();
   }
 
+  /// [Android 8+, iOS 12+] activate a screenshot listener
+  /// on Android, the function will not work properly when the protection filter is activated
+  /// due to specification of Android platform
+  /// Throws a [PlatformException] if there were technical problems on native side
   Future<void> registerScreenshotEventListener() {
     return FlutterScreenguardPlatform.instance
         .registerScreenshotEventListener();
   }
 
+  /// [iOS 12+] (iOS only) activate a screen recording listener
+  /// on Android, the function will not work properly when the protection filter is activated
+  /// due to Android technical platform
+  /// Throws a [PlatformException] if there were technical problems on native side
   Future<void> registerScreenRecordingEventListener() {
     return FlutterScreenguardPlatform.instance
         .registerScreenRecordingEventListener();
   }
 
+  /// [Android 8+, iOS 12+] deactivate all screenshot
+  /// on Android, the function will not work properly when the protection filter is activated
+  /// due to Android technical platform
+  /// Throws a [PlatformException] if there were technical problems on native side
   Future<void> unregister() {
     return FlutterScreenguardPlatform.instance.unregister();
   }

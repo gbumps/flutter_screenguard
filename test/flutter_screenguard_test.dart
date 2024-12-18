@@ -32,6 +32,7 @@ class MockFlutterScreenguardPlatform
   @override
   Future<void> registerWithBlurView(
       {required num radius,
+        String? localImagePath,
       Duration? timeAfterResume = const Duration(milliseconds: 1000)}) {
     throw UnimplementedError();
   }

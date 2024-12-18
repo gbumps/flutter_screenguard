@@ -10,7 +10,7 @@ import 'dart:typed_data';
 class FlutterScreenguardHelper {
   static Future<String?> captureAsUiImage(
       {double? pixelRatio = 1,
-     required GlobalKey globalKey,
+      required GlobalKey globalKey,
       Duration delay = const Duration(milliseconds: 40)}) {
     return Future.delayed(delay, () async {
       try {
