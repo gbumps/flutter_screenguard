@@ -35,9 +35,7 @@ class _MyAppState extends State<MyApp> {
           ..initialize();
     _flutterScreenguardScreenRecordingEvent =
         FlutterScreenguardScreenRecordingEvent()
-          ..addListener(
-            () {},
-          );
+          ..initialize();
     selection = -1; // initPlatformState();
     textController = TextEditingController();
   }

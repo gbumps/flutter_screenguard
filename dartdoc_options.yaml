@@ -1,0 +1,9 @@
+dartdoc:
+  exclude:
+    - test
+  add-crossdart: true           # Add links to Crossdart
+  link-to-source: true          # Link to the GitHub source code
+
+#  footer: ["© 2024 Gbumps. All rights reserved."]
+  category-order:               # Arrange classes in categories
+    - FlutterScreenGuard
