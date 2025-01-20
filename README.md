@@ -217,21 +217,21 @@ then use as such
 
 ```dart
 
- _flutterScreenguardScreenshotListener.addListener(
-                      () {
-                        FileCaptureDetail? data =
-                            _flutterScreenguardScreenshotListener.value;
-                        debugPrint(
-                          'path: ${data?.path}',
-                        );
-                        debugPrint(
-                          'name: ${data?.name}',
-                        );
-                        debugPrint(
-                          'type: ${data?.type}',
-                        );
-                      },
-                    );
+  _flutterScreenguardScreenshotListener.addListener(
+    () {
+      FileCaptureDetail? data =
+          _flutterScreenguardScreenshotListener.value;
+      debugPrint(
+        'path: ${data?.path}',
+      );
+      debugPrint(
+        'name: ${data?.name}',
+      );
+      debugPrint(
+        'type: ${data?.type}',
+      );
+    },
+  );
 ```
 
 
@@ -277,20 +277,19 @@ class _MyAppState extends State<MyApp> {
 then use as such 
 
 ```dart
-
-      _flutterScreenguardScreenRecordingEvent.addListener(
-                      () {
-                        debugPrint(
-                          'screen is recording!',
-                        );
-                      },
-                    );
+  _flutterScreenguardScreenRecordingEvent.addListener(
+    () {
+      debugPrint(
+        'screen is recording!',
+      );
+    },
+  );
 ```
 
 
 ### unregister
 
-deactivate the screeng
+deactivate the screenguard 
 
 ```dart
   await _flutterScreenguardPlugin.unregister();
