@@ -2,6 +2,8 @@
 
 A Native screenshot blocking plugin for Flutter developer, with background customizable after captured. Screenshot detector are also supported.
 
+https://github.com/user-attachments/assets/ea6cba30-5930-4219-92c5-283db2cf125e
+
 ## Requirements
 
 - Flutter >=3.7.0
@@ -63,6 +65,10 @@ class _MyAppState extends State<MyApp> {
 
 Activate the screenguard with your custom background color layout.
 
+
+https://github.com/user-attachments/assets/9ccdc973-a07c-454b-9383-d905f73cdd87
+
+
 ```dart
   await _flutterScreenguardPlugin.register(
     color: Colors.red,
@@ -95,7 +101,11 @@ Activate screenguard with a blurred effect view after captured.
 
 Blurview on Android using [Blurry](https://github.com/wasabeef/Blurry).
 
-(Remember to register the instance with a GlobalKey before proceed!)
+(Remember to register the instance with a GlobalKey and attach this key to view before proceed!)
+
+
+https://github.com/user-attachments/assets/77d40b1f-0e8d-443a-9c85-f57512497fc5
+
 
 ```dart
 import 'package:flutter_screenguard/flutter_screenguard.dart';
@@ -118,6 +128,15 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _flutterScreenguardPlugin = FlutterScreenguard(globalKey: globalKey);
   }
+
+  @override
+    @override
+  Widget build(BuildContext context) {
+       return RepaintBoundary(
+         key: globalKey,
+         child: Scaffold(.........)
+      );
+   }
 }
 ```
 
@@ -141,6 +160,11 @@ await _flutterScreenguardPlugin.registerWithBlurView(
 Activate screenguard with a custom image view and background color.
 
 ImageView using SDWebImage on iOS and Glide on Android for faster loading and caching.
+
+
+https://github.com/user-attachments/assets/41c63ba2-225a-4654-80a3-c6db2c4cab9b
+
+
 
 ```dart
   await _flutterScreenguardPlugin.registerWithImage(
@@ -243,7 +267,6 @@ If false, callback will return null.
 
 (iOS only) Activate a screen recording detector and receive an event callback after a record has done.
 
-
 ```dart
 import 'package:flutter_screenguard/flutter_screenguard_screen_record_event.dart';
 ```
@@ -286,7 +309,6 @@ then use as such
   );
 ```
 
-
 ### unregister
 
 deactivate the screenguard 
@@ -294,3 +316,13 @@ deactivate the screenguard
 ```dart
   await _flutterScreenguardPlugin.unregister();
 ```
+
+## Testing
+
+### iOS Simulator
+- If you want to test on iOS simulator, open Simulator, on the top screen, navigate to Device -> Trigger Screenshot. This is applied to iOS 14+.
+
+### Android Emulator
+If you want to test on Android Emulator, you can create an emulator with Google Play Service API supported. Then go to Play Store and download any third-party screen record and screenshot app based on your need (XRecorder, AZ, etc....) for testing.
+
+Android 12+ emulator already provided screenshot and screen record function in Quick Settings Panel.
