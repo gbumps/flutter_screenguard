@@ -29,6 +29,47 @@ Or you can run this command to install it from the flutter pub.
 flutter pub add flutter_screenguard
 ```
 
+## (Most important!) Post installation for Android
+
+On Android, remember to setup a little bit as you will not receive the background color or the blur effect like in the video example.
+
+Open up [your_project_path]/android/app/src/main/AndroidManifest.xml and add activity com.screenguard.ScreenGuardColorActivity like below
+
+```
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application ......>
+      	<activity
+      	  android:name=".MainActivity" .........>
+      	  ..........
+      	</activity>
+
++       <activity android:name="com.screenguard.ScreenGuardColorActivity"
++            android:theme="@style/Theme.AppCompat.Translucent"
++            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
++            android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
++            android:exported="false"
++        />
+    </application>
+</manifest>
+```
+
+Open up [your_project_path]/android/app/src/main/res/values/styles.xml and add style Theme.AppCompat.Translucent like below
+```
+<resource>
+
+<style name="AppTheme">your current app style theme.............</style>
+
++ <style name="Theme.AppCompat.Translucent">
++        <item name="android:windowNoTitle">true</item>
++        <item name="android:windowBackground">@android:color/transparent</item>
++        <item name="android:colorBackgroundCacheHint">@null</item>
++        <item name="android:windowIsTranslucent">true</item>
++        <item name="android:windowAnimationStyle">@null</item>
++        <item name="android:windowSoftInputMode">adjustResize</item>
++ </style>
+</resource>
+```
+
 ## Usage
 
 import the plugin as follow
