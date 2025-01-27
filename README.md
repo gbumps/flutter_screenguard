@@ -142,9 +142,6 @@ Activate screenguard with a blurred effect view after captured.
 
 Blurview on Android using [Blurry](https://github.com/wasabeef/Blurry).
 
-<blockquote>
-Set blur radius smaller than 15 won't help much, as content still look very clear and easy to read. Same with bigger than 50 but content will be shrinked and vanished inside the view, blurring is meaningless. So, between 15 and 50 is enough.
-</blockquote>
 
 (Remember to register the instance with a GlobalKey and attach this key to the view before proceed!)
 
@@ -194,10 +191,13 @@ await _flutterScreenguardPlugin.registerWithBlurView(
 
 #### Parameters:
 
-- **radius**: blur radius value number in between [15, 50], throws warning if smaller than 15 or bigger than 50, exception if smaller than 1 or not a number.
+- **radius**: blur radius value number in between [15, 50], throws warning if smaller than 15 or bigger than 50, exception if smaller than 1.
 
 - **timeAfterResume (Android only)**: A small amount of time (in milliseconds) for the view to disappear before jumping back to the main application view.
 
+<blockquote>
+Set blur radius smaller than 15 won't help much, as content still look very clear and easy to read. Same with bigger than 50 but content will be shrinked and vanished inside the view, blurring is meaningless. So, between 15 and 50 is enough.
+</blockquote>
 
 ### registerWithImage
 
