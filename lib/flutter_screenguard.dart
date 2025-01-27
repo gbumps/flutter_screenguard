@@ -60,6 +60,11 @@ class FlutterScreenguard {
     Duration? timeAfterResume = const Duration(milliseconds: 1000),
   }) async {
     assert(globalKey != null);
+    assert(radius > 0);
+    if (radius < 15 || radius > 50) {
+      debugPrint(
+          'Set blur radius smaller than 15 wont help much, as content still look very clear and easy to read. Same with bigger than 50 but content will be shrinked and vanished inside the view, blurring is meaningless.');
+    }
     final url =
         await FlutterScreenguardHelper.captureAsUiImage(globalKey: globalKey!);
     if (url != null) {
