@@ -37,7 +37,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _flutterScreenguardPlugin = FlutterScreenguard(globalKey: globalKey);
     _flutterScreenguardScreenshotListener =
-        FlutterScreenguardScreenshotEvent(getScreenshotData: false)
+        FlutterScreenguardScreenshotEvent(getScreenshotData: true)
           ..initialize();
     _flutterScreenguardScreenRecordingEvent =
         FlutterScreenguardScreenRecordingEvent()..initialize();
