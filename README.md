@@ -231,7 +231,7 @@ https://github.com/user-attachments/assets/41c63ba2-225a-4654-80a3-c6db2c4cab9b
 
 - **color**: The background color you want to display from, [Colors class](https://api.flutter.dev/flutter/material/Colors-class.html)
 
-- **alignment**	 Position of image predefined in library 
+- **alignment**	 Position of image predefined in Flutter library based on [Alignment constant](https://api.flutter.dev/flutter/painting/Alignment-class.html#constants)
 
 - **timeAfterResume (Android only)**: A small amount of time (in milliseconds) for the view to disappear before jumping back to the main application view.
 
@@ -242,6 +242,12 @@ https://github.com/user-attachments/assets/41c63ba2-225a-4654-80a3-c6db2c4cab9b
 - **bottom**	Bottom of the image
 
 - **right**	Right of the image
+
+<blockquote>
+`alignment` can't be combined with position(top, left, bottom, right) params cause this will always be checked 1st, and all positions will be skipped if not null.
+
+Set `alignment` to null if you want to custom your own position with one of position param `top`, `left`, `bottom` or `right` above.
+</blockquote>
 
 ### registerWithoutEffect
 
