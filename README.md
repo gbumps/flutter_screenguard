@@ -370,3 +370,12 @@ deactivate the screenguard
 - If you want to test on Android Emulator, you can create an emulator with Google Play Service API supported. Then go to Play Store and download any third-party screen record and screenshot app based on your need (XRecorder, AZ, etc....) for testing.
 
 - Android 12+ emulator already provided screenshot and screen record function in Quick Settings Panel.
+
+
+## Limitation
+
+- This library support blocking screenshot for iOS 13+, Android 8+ only.
+
+- Remember to call a function only ONCE and don't combine with other register functions for limitting errors and unexpected problems might happened during testing.
+
+- Please remember that text input will be temporary disabled until calling unregister on Android except registerWithoutEffect. Still working to find a solution.
