@@ -33,7 +33,7 @@ flutter pub add flutter_screenguard
 
 On Android, remember to setup a little bit as you will not receive the background color or the blur effect like in the video example.
 
-Open up [your_project_path]/android/app/src/main/AndroidManifest.xml and add activity com.screenguard.ScreenGuardColorActivity like below
+Open up [your_project_path]/android/app/src/main/AndroidManifest.xml and add activity `com.screenguard.flutter_screenguard.ScreenGuardColorActivity` like below
 
 ```
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -43,7 +43,7 @@ Open up [your_project_path]/android/app/src/main/AndroidManifest.xml and add act
       	  ..........
       	</activity>
 
-+       <activity android:name="com.screenguard.ScreenGuardColorActivity"
++       <activity android:name="com.screenguard.flutter_screenguard.ScreenGuardColorActivity"
 +            android:theme="@style/Theme.AppCompat.Translucent"
 +            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
 +            android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
