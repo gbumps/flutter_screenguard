@@ -89,7 +89,7 @@ class MethodChannelFlutterScreenguard extends FlutterScreenguardPlatform {
       'uri': uri,
       'width': width.toString(),
       'height': height.toString(),
-      'alignment': align == -1 ? null : align,
+      'alignment': align == -1 ? 4 : align,
       'top': top,
       'left': left,
       'bottom': bottom,
