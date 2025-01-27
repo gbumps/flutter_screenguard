@@ -142,7 +142,11 @@ Activate screenguard with a blurred effect view after captured.
 
 Blurview on Android using [Blurry](https://github.com/wasabeef/Blurry).
 
-(Remember to register the instance with a GlobalKey and attach this key to view before proceed!)
+<blockquote>
+Set blur radius smaller than 15 won't help much, as content still look very clear and easy to read. Same with bigger than 50 but content will be shrinked and vanished inside the view, blurring is meaningless. So, between 15 and 50 is enough.
+</blockquote>
+
+(Remember to register the instance with a GlobalKey and attach this key to the view before proceed!)
 
 
 https://github.com/user-attachments/assets/77d40b1f-0e8d-443a-9c85-f57512497fc5
