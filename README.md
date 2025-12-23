@@ -2,7 +2,7 @@
 
 A Native screenshot blocking plugin for Flutter developer, with background customizable after captured. Screenshot detector are also supported.
 
-https://github.com/user-attachments/assets/ea6cba30-5930-4219-92c5-283db2cf125e
+https://github-production-user-asset-6210df.s3.amazonaws.com/16846439/406836547-ea6cba30-5930-4219-92c5-283db2cf125e.mp4
 
 ## Requirements
 
