@@ -1,6 +1,4 @@
 #import <Flutter/Flutter.h>
-#import <FlutterScreenguardScreenshotListener.h>
-#import <FlutterScreenguardRecordingListener.h>
 
 typedef NS_ENUM(NSInteger, ScreenGuardImageAlignment) {
     AlignmentTopLeft,
@@ -14,18 +12,12 @@ typedef NS_ENUM(NSInteger, ScreenGuardImageAlignment) {
     AlignmentBottomRight
 };
 
-
-NSString* _Nullable NSStringFromAlignment(ScreenGuardImageAlignment alignment);
-
 extern NSString * _Nonnull const REGISTER;
 extern NSString * _Nonnull const REGISTER_BLUR_VIEW;
 extern NSString * _Nonnull const REGISTER_IMAGE_VIEW;
 extern NSString * _Nonnull const UNREGISTER;
 
 @interface FlutterScreenguardPlugin : NSObject<FlutterPlugin>
-
-@property (nonatomic, strong) FlutterScreenguardScreenshotListener * _Nullable screenShotListener;
-@property (nonatomic, strong) FlutterScreenguardRecordingListener * _Nullable screenRecordingListener;
 
 - (void)secureViewWithBackgroundColor: (NSString *_Nonnull)color;
 - (void)secureViewWithBlurView: (nonnull NSNumber *)radius imagePath:(NSString *_Nonnull) imagePath;
