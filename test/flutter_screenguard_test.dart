@@ -9,31 +9,17 @@ class MockFlutterScreenguardPlatform
     with MockPlatformInterfaceMixin
     implements FlutterScreenguardPlatform {
   @override
-  Future<String?> getPlatformVersion() => Future.value('42');
-
-  @override
-  Future<void> register(
-      {required Color color,
-      Duration? timeAfterResume = const Duration(milliseconds: 1000)}) {
+  Future<void> register({
+    required Color color,
+  }) {
     throw UnimplementedError();
   }
 
   @override
-  Future<void> registerScreenRecordingEventListener() {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> registerScreenshotEventListener(
-      {bool? getScreenShotPath = false}) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> registerWithBlurView(
-      {required num radius,
-        String? localImagePath,
-      Duration? timeAfterResume = const Duration(milliseconds: 1000)}) {
+  Future<void> registerWithBlurView({
+    required num radius,
+    String? localImagePath,
+  }) {
     throw UnimplementedError();
   }
 
@@ -43,7 +29,6 @@ class MockFlutterScreenguardPlatform
     required double width,
     required double height,
     Color? color = Colors.black,
-    Duration? timeAfterResume = const Duration(milliseconds: 1000),
     Alignment? alignment,
     double? top,
     double? left,
@@ -62,6 +47,35 @@ class MockFlutterScreenguardPlatform
   Future<void> unregister() {
     throw UnimplementedError();
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> getScreenGuardLogs({
+    required int maxCount,
+  }) {
+    return Future.value([]);
+  }
+
+  @override
+  Stream<Map<String, dynamic>> get onScreenshotCaptured => const Stream.empty();
+
+  @override
+  Stream<Map<String, dynamic>> get onScreenRecordingCaptured =>
+      const Stream.empty();
+
+  @override
+  Future<void> initSettings({
+    bool? enableCapture = false,
+    bool? enableRecord = false,
+    bool? enableContentMultitask = false,
+    bool? displayOverlay = false,
+    bool? displayScreenguardOverlayAndroid = true,
+    int? timeAfterResume = 1000,
+    bool? getScreenshotPath = false,
+    int? limitCaptureEvtCount = 0,
+    bool? trackingLog = false,
+  }) {
+    return Future.value();
+  }
 }
 
 void main() {
@@ -72,12 +86,13 @@ void main() {
     expect(initialPlatform, isInstanceOf<MethodChannelFlutterScreenguard>());
   });
 
-  test('getPlatformVersion', () async {
+  test('initSettings works', () async {
     FlutterScreenguard flutterScreenguardPlugin = FlutterScreenguard();
     MockFlutterScreenguardPlatform fakePlatform =
         MockFlutterScreenguardPlatform();
     FlutterScreenguardPlatform.instance = fakePlatform;
 
-    // expect(await flutterScreenguardPlugin.getPlatformVersion(), '42');
+    await flutterScreenguardPlugin.initSettings(
+        enableCapture: false, enableRecord: false);
   });
 }

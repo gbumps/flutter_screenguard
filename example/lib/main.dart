@@ -1,9 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:flutter_screenguard/flutter_screenguard.dart';
-import 'package:flutter_screenguard/flutter_screenguard_screen_record_event.dart';
-import 'package:flutter_screenguard/flutter_screenguard_screenshot_event.dart';
 
 void main() {
   runApp(const MaterialApp(localizationsDelegates: [
@@ -22,34 +21,39 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late final FlutterScreenguard _flutterScreenguardPlugin;
-  late final FlutterScreenguardScreenshotEvent
-      _flutterScreenguardScreenshotListener;
-  late final FlutterScreenguardScreenRecordingEvent
-      _flutterScreenguardScreenRecordingEvent;
+  late FlutterScreenguard _flutterScreenguardPlugin;
   late TextEditingController textController;
   final GlobalKey globalKey = GlobalKey();
 
   late int selection;
+  StreamSubscription? _screenshotSubscription;
 
   @override
   void initState() {
     super.initState();
     _flutterScreenguardPlugin = FlutterScreenguard(globalKey: globalKey);
-    _flutterScreenguardScreenshotListener =
-        FlutterScreenguardScreenshotEvent(getScreenshotData: true)
-          ..initialize();
-    _flutterScreenguardScreenRecordingEvent =
-        FlutterScreenguardScreenRecordingEvent()..initialize();
     selection = -1;
     textController = TextEditingController();
   }
 
+  Future<void> _initScreenGuard() async {
+    await _flutterScreenguardPlugin.initSettings(
+      displayOverlay: true,
+      displayScreenguardOverlayAndroid: true,
+      limitCaptureEvtCount: 4,
+      timeAfterResume: 5000
+    );
+    _screenshotSubscription =
+        _flutterScreenguardPlugin.onScreenshotCaptured.listen((event) {
+      debugPrint("Screenshot captured: $event");
+    });
+  }
+
   @override
   void dispose() {
-    super.dispose();
     _flutterScreenguardPlugin.unregister();
-    _flutterScreenguardScreenshotListener.dispose();
+    _screenshotSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -65,6 +69,12 @@ class _MyAppState extends State<MyApp> {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              ElevatedButton(
+                onPressed: () async {
+                  await _initScreenGuard();
+                },
+                child: const Text('Init Settings'),
+              ),
               ElevatedButton(
                 onPressed: () async {
                   setState(() {
@@ -88,8 +98,9 @@ class _MyAppState extends State<MyApp> {
               ElevatedButton(
                 onPressed: () async {
                   await _flutterScreenguardPlugin.registerWithBlurView(
-                      radius: 6,
-                      timeAfterResume: const Duration(milliseconds: 2000));
+                    radius: 15,
+                    globalKey: globalKey,
+                  );
                   setState(() {
                     selection = 1;
                   });
@@ -118,7 +129,6 @@ class _MyAppState extends State<MyApp> {
                     width: 150,
                     height: 300,
                     alignment: Alignment.topCenter,
-                    timeAfterResume: const Duration(milliseconds: 2000),
                     color: Colors.green,
                   );
                 },
@@ -143,7 +153,7 @@ class _MyAppState extends State<MyApp> {
                   await _flutterScreenguardPlugin.unregister();
                 },
                 child: Text(
-                  'deactivate screen blocking',
+                  'Deactivate screen blocking',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: selection == 3 ? Colors.green : Colors.black,
@@ -154,78 +164,6 @@ class _MyAppState extends State<MyApp> {
               ),
               const SizedBox(
                 height: 14,
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  setState(() {
-                    selection = 4;
-                  });
-                  _flutterScreenguardScreenshotListener.addListener(
-                    () {
-                      showDialog<void>(
-                        context: context,
-                        barrierDismissible: true, // user must tap button!
-                        builder: (BuildContext context) {
-                          FileCaptureDetail? d =
-                              _flutterScreenguardScreenshotListener.value;
-                          return AlertDialog(
-                            title: const Text('Screenshot capture'),
-                            content: SingleChildScrollView(
-                              child: ListBody(
-                                children: <Widget>[
-                                  Text('path: ${d?.path}'),
-                                  Text(
-                                    'name: ${d?.name}',
-                                  ),
-                                  Text(
-                                    'type: ${d?.type}',
-                                  )
-                                ],
-                              ),
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                child: const Text('OK'),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-                child: Text(
-                  'Activate screenshot listener',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: selection == 4 ? Colors.green : Colors.black,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 14,
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  setState(() {
-                    selection = 5;
-                  });
-                  _flutterScreenguardScreenshotListener.dispose();
-                },
-                child: Text(
-                  'deactivate screenshot listener',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: selection == 5 ? Colors.green : Colors.black,
-                    fontSize: 16,
-                  ),
-                ),
               ),
               const SizedBox(
                 height: 14,
