@@ -54,4 +54,19 @@ public class ScreenGuardHelper {
         return null;
     }
 
+    public static Bitmap loadBitmapFromPath(String path) {
+        try {
+            if (path == null || path.isEmpty()) {
+                return null;
+            }
+            File file = new File(path);
+            if (!file.exists()) {
+                return null;
+            }
+            return android.graphics.BitmapFactory.decodeFile(path);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
