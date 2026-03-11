@@ -2,6 +2,7 @@
 
 A Native screenshot blocking plugin for Flutter developer, with powerful event detection capabilities.
 
+https://github-production-user-asset-6210df.s3.amazonaws.com/16846439/406836547-ea6cba30-5930-4219-92c5-283db2cf125e.mp4
 
 ---
 
@@ -207,7 +208,8 @@ await _screenguard.initSettings(
 
 Activate screen protection with a **solid color** overlay.
 
-![flt_sg_color](https://github.com/user-attachments/assets/a60135a1-e88e-4743-b48d-f972bfdb198b)
+![flt_sg_color](https://github.com/user-attachments/assets/ae6a060f-0e40-4b48-ae52-a87da3b7077e)
+
 
 ```dart
 await _screenguard.register(color: Colors.red);
@@ -230,7 +232,7 @@ Activate screen protection with a **blurred snapshot** of the current screen.
 > [!IMPORTANT]
 > You must wrap your root widget with `RepaintBoundary` and pass its `GlobalKey` to `FlutterScreenguard` (via constructor or method parameter).
 
-![fpt_sg_blur](https://github.com/user-attachments/assets/273e8888-17ef-4e73-9ac6-c7d9be1168fc)
+![fpt_sg_blur](https://github.com/user-attachments/assets/ee1e1415-53a7-4de1-808d-4de388359a0a)
 
 
 ```dart
@@ -257,7 +259,7 @@ Activate screen protection with a **custom image** overlay.
 
 Uses [SDWebImage](https://github.com/SDWebImage/SDWebImage) on iOS and [Glide](https://github.com/bumptech/glide) on Android for fast loading and caching.
 
-![flt_sg_img](https://github.com/user-attachments/assets/fa211414-8221-40f0-85c0-84e5523522c5)
+![flt_sg_img](https://github.com/user-attachments/assets/970cd9fb-047b-415c-bcd5-d3fbc2719e0c)
 
 
 ```dart
