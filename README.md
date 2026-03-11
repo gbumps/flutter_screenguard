@@ -1,54 +1,73 @@
 # flutter_screenguard
 
-A Native screenshot blocking plugin for Flutter developer, with background customizable after captured. Screenshot detector are also supported.
+A Native screenshot blocking plugin for Flutter developer, with powerful event detection capabilities.
 
-https://github-production-user-asset-6210df.s3.amazonaws.com/16846439/406836547-ea6cba30-5930-4219-92c5-283db2cf125e.mp4
+https://github.com/user-attachments/assets/ea6cba30-5930-4219-92c5-283db2cf125e
 
-## Requirements
+---
 
-- Flutter >=3.7.0
-- Dart >=3.4.0 <4.0.0
-- iOS >=12.0
-- Android compileSDK 34
-- Java 17
-- Android Gradle Plugin >=8.3.0
-- Gradle wrapper >=7.6
+## ✨ Features
 
-## Installation
+- 🛡️ **Block screenshots** with customizable color overlay, blur effect, or image overlay
+- 📸 **Screenshot detection** — listen for screenshot events with optional captured file info
+- 🎥 **Screen recording detection** — detect when screen recording starts/stops
+- 📝 **Event logging** — track and retrieve screenguard logs from native storage
+- 🔧 **Highly configurable** — fine-tune behavior per platform with `initSettings`
 
-To use this plugin, add `flutter_screenguard` as a dependency in your `pubspec.yaml` file
+## 📋 Requirements
 
-```
+| Platform | Minimum Version |
+|----------|----------------|
+| Flutter  | ≥ 3.7.0        |
+| Dart     | ≥ 3.4.0 < 4.0.0 |
+| iOS      | ≥ 12.0         |
+| Android compileSdk | 34     |
+| Java     | 17             |
+| Android Gradle Plugin | ≥ 8.3.0 |
+| Gradle wrapper | ≥ 7.6    |
+
+## 📦 Installation
+
+Add `flutter_screenguard` to your `pubspec.yaml`:
+
+```yaml
 dependencies:
-   flutter_screenguard: ^1.0.0
+  flutter_screenguard: ^2.0.0
 ```
 
-Or you can run this command to install it from the flutter pub.
+Or install via CLI:
 
 ```shell
 flutter pub add flutter_screenguard
 ```
 
-## (Most important!) Post installation for Android
+---
 
-On Android, remember to setup a little bit as you will not receive the background color or the blur effect like in the video example.
+## ⚠️ Post-Installation Setup (Android) (v1.0.0 only)
 
-Open up [your_project_path]/android/app/src/main/AndroidManifest.xml and add activity `com.screenguard.flutter_screenguard.ScreenGuardColorActivity` like below
+> [!IMPORTANT]
+> You **must** complete these steps on Android for color overlay and blur effects to work properly.
+> v2.0.0+ no longer need to do this step!
 
-```
+### 1. Register the overlay Activity
+
+Open `android/app/src/main/AndroidManifest.xml` and add `ScreenGuardColorActivity` inside the `<application>` tag:
+
+```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application ......>
-      	<activity
-      	  android:name=".MainActivity" .........>
-      	  ..........
-      	</activity>
+    <application ...>
+        <activity
+            android:name=".MainActivity" ...>
+            ...
+        </activity>
 
-+       <activity android:name="com.screenguard.flutter_screenguard.ScreenGuardColorActivity"
-+            android:theme="@style/Theme.AppCompat.Translucent"
-+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
-+            android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
-+            android:exported="false"
-+        />
+        <!-- Add this ↓ -->
+        <activity android:name="com.screenguard.flutter_screenguard.ScreenGuardColorActivity"
+            android:theme="@style/Theme.AppCompat.Translucent"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+            android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
+            android:exported="false"
+        />
     </application>
 </manifest>
 ```
@@ -70,19 +89,19 @@ Open up [your_project_path]/android/app/src/main/res/values/styles.xml and add s
 </resource>
 ```
 
-## Usage
+---
 
-import the plugin as follow
+## 🚀 Usage
+
+### Import
 
 ```dart
 import 'package:flutter_screenguard/flutter_screenguard.dart';
 ```
 
-then, create an instance of `FlutterScreenguard` as such 
+### Basic Setup
 
 ```dart
-import 'package:flutter_screenguard/flutter_screenguard.dart';
-
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -91,297 +110,274 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late final FlutterScreenguard _screenguard;
+  final GlobalKey _globalKey = GlobalKey();
+  StreamSubscription? _screenshotSub;
+  StreamSubscription? _recordingSub;
 
-  late final FlutterScreenguard _flutterScreenguardPlugin;
-  
   @override
   void initState() {
     super.initState();
-    _flutterScreenguardPlugin = FlutterScreenguard();
+    // Pass globalKey if you plan to use registerWithBlurView
+    _screenguard = FlutterScreenguard(globalKey: _globalKey);
+    _initScreenGuard();
   }
-}
-```
 
-### register
+  Future<void> _initScreenGuard() async {
+    // ① Initialize settings (required before calling any register method)
+    await _screenguard.initSettings(
+      displayOverlay: true,
+      displayScreenguardOverlayAndroid: true,
+      timeAfterResume: 2000,
+    );
 
-Activate the screenguard with your custom background color layout.
+    // Listen for screenshot events
+    _screenshotSub = _screenguard.onScreenshotCaptured.listen((event) {
+      debugPrint('Screenshot captured: $event');
+    });
 
+    // Listen for screen recording events
+    _recordingSub = _screenguard.onScreenRecordingCaptured.listen((event) {
+      debugPrint('Recording event: $event');
+    });
 
-https://github.com/user-attachments/assets/9ccdc973-a07c-454b-9383-d905f73cdd87
-
-
-```dart
-  await _flutterScreenguardPlugin.register(
-    color: Colors.red,
-  );
-```
-
-```dart
-  await _flutterScreenguardPlugin.register(
-    color: Color(0xFFFFFC31),
-    timeAfterResume: const Duration(milliseconds: 2500),
-  );
-``` 
-
-```dart
-  await _flutterScreenguardPlugin.register(
-    color: Color.fromRGBO(178, 178, 178, 1),
-    timeAfterResume: const Duration(milliseconds: 3000),
-  );
-```
-
-#### Parameters:
-
-- **color**: The background color you want to display from, [Colors class](https://api.flutter.dev/flutter/material/Colors-class.html)
-
-- **timeAfterResume (Android only)**: A small amount of time (in milliseconds) for the view to disappear before jumping back to the main application view.
-
-### registerWithBlurView
-
-Activate screenguard with a blurred effect view after captured.
-
-Blurview on Android using [Blurry](https://github.com/wasabeef/Blurry).
-
-
-(Remember to register the instance with a GlobalKey and attach this key to the view before proceed!)
-
-
-https://github.com/user-attachments/assets/77d40b1f-0e8d-443a-9c85-f57512497fc5
-
-
-```dart
-import 'package:flutter_screenguard/flutter_screenguard.dart';
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+    // ④ Activate screen protection (pick one)
+    await _screenguard.register(color: Colors.black);
+  }
 
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-
-  late final FlutterScreenguard _flutterScreenguardPlugin;
-
-  final GlobalKey globalKey = GlobalKey();
-  
-  @override
-  void initState() {
-    super.initState();
-    _flutterScreenguardPlugin = FlutterScreenguard(globalKey: globalKey);
+  void dispose() {
+    _screenguard.unregister();
+    _screenshotSub?.cancel();
+    _recordingSub?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-       return RepaintBoundary(
-         key: globalKey,
-         child: Scaffold(.........)
-      );
-   }
+    return RepaintBoundary(
+      key: _globalKey,  // Required for blur effect
+      child: Scaffold(
+        body: Center(child: Text('Protected Content')),
+      ),
+    );
+  }
 }
 ```
 
-then use as such
+> [!NOTE]
+> You must call `initSettings()` **before** any `register*` method, or an exception will be thrown.
+
+---
+
+## 📖 API Reference
+
+### `initSettings`
+
+Initialize the screen guard with configuration options. **Must be called first.**
 
 ```dart
-await _flutterScreenguardPlugin.registerWithBlurView(
-    radius: 6,
-    timeAfterResume: const Duration(milliseconds: 2000));
+await _screenguard.initSettings(
+  enableCapture: false,
+  enableRecord: false,
+  enableContentMultitask: false,
+  displayOverlay: false,
+  displayScreenguardOverlayAndroid: true,
+  timeAfterResume: 1000,
+  getScreenshotPath: false,
+  limitCaptureEvtCount: 0,
+  trackingLog: false,
+);
 ```
 
-#### Parameters:
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `enableCapture` | `bool?` | `false` | Enable screenshot capture detection |
+| `enableRecord` | `bool?` | `false` | Enable screen recording detection |
+| `enableContentMultitask` | `bool?` | `false` | Show content in multitask/app switcher *(iOS only)* |
+| `displayOverlay` | `bool?` | `false` | Display overlay when user captures the screen *(iOS only)* |
+| `displayScreenguardOverlayAndroid` | `bool?` | `true` | Display overlay when returning from background *(Android only)* |
+| `timeAfterResume` | `int?` | `1000` | Delay (ms) before the overlay disappears when returning to the app |
+| `getScreenshotPath` | `bool?` | `false` | Include file path in screenshot event data |
+| `limitCaptureEvtCount` | `int?` | `0` | Max number of screenshot events to trigger (`0` = unlimited) |
+| `trackingLog` | `bool?` | `false` | Save events to native storage for later retrieval |
 
-- **radius**: blur radius value number in between [15, 50], throws warning if smaller than 15 or bigger than 50, exception if smaller than 1.
+---
 
-- **timeAfterResume (Android only)**: A small amount of time (in milliseconds) for the view to disappear before jumping back to the main application view.
+### `register`
 
-<blockquote>
-Set blur radius smaller than 15 won't help much, as content still look very clear and easy to read. Same with bigger than 50 but content will be shrinked and vanished inside the view, blurring is meaningless. So, between 15 and 50 is enough.
-</blockquote>
+Activate screen protection with a **solid color** overlay.
 
-### registerWithImage
+https://github.com/user-attachments/assets/9ccdc973-a07c-454b-9383-d905f73cdd87
 
-Activate screenguard with a custom image view and background color.
+```dart
+await _screenguard.register(color: Colors.red);
+```
 
-ImageView using SDWebImage on iOS and Glide on Android for faster loading and caching.
+```dart
+await _screenguard.register(color: Color(0xFFFFFC31));
+```
 
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `color` | `Color` | ✅ | Background color for the protection overlay |
+
+---
+
+### `registerWithBlurView`
+
+Activate screen protection with a **blurred snapshot** of the current screen.
+
+> [!IMPORTANT]
+> You must wrap your root widget with `RepaintBoundary` and pass its `GlobalKey` to `FlutterScreenguard` (via constructor or method parameter).
+
+https://github.com/user-attachments/assets/77d40b1f-0e8d-443a-9c85-f57512497fc5
+
+```dart
+// GlobalKey provided in constructor
+await _screenguard.registerWithBlurView(radius: 25);
+
+// Or provide GlobalKey per-call
+await _screenguard.registerWithBlurView(radius: 25, globalKey: myKey);
+```
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `radius` | `num` | ✅ | Blur radius. Recommended range: **15–50** |
+| `globalKey` | `GlobalKey?` | — | Override the key passed in the constructor |
+
+> [!TIP]
+> A radius below **15** is too subtle — content remains readable. Above **50** is overkill — content shrinks and disappears. The sweet spot is **15–50**.
+
+---
+
+### `registerWithImage`
+
+Activate screen protection with a **custom image** overlay.
+
+Uses [SDWebImage](https://github.com/SDWebImage/SDWebImage) on iOS and [Glide](https://github.com/bumptech/glide) on Android for fast loading and caching.
 
 https://github.com/user-attachments/assets/41c63ba2-225a-4654-80a3-c6db2c4cab9b
 
-
-
 ```dart
-  await _flutterScreenguardPlugin.registerWithImage(
-    uri: 'https://image.shutterstock.com/image-photo/red-mum-flower-photography-on-260nw-2533542589.jpg',
-    width: 150,
-    height: 300,
-    alignment: Alignment.topCenter,
-    timeAfterResume: const Duration(milliseconds: 2000),
-    color: Colors.green,
-  );
+await _screenguard.registerWithImage(
+  uri: 'https://example.com/logo.png',
+  width: 150,
+  height: 300,
+  alignment: Alignment.center,
+  color: Colors.black,
+);
 ```
 
-#### Parameters:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `uri` | `String` | ✅ | URL of the image to display |
+| `width` | `double` | ✅ | Width of the image |
+| `height` | `double` | ✅ | Height of the image |
+| `color` | `Color?` | — | Background color (default: `Colors.black`) |
+| `alignment` | `Alignment?` | — | Image position using Flutter [Alignment](https://api.flutter.dev/flutter/painting/Alignment-class.html) constants |
+| `top` | `double?` | — | Custom top position |
+| `left` | `double?` | — | Custom left position |
+| `bottom` | `double?` | — | Custom bottom position |
+| `right` | `double?` | — | Custom right position |
 
-- **width**	  Width of the image
+> [!NOTE]
+> `alignment` takes priority over manual positioning (`top`, `left`, `bottom`, `right`). Set `alignment` to `null` if you want to use custom positions.
 
-- **height**	Heigh of the image
+---
 
-- **uri**	Source uri of the image
+### `registerWithoutEffect`
 
-- **color**: The background color you want to display from, [Colors class](https://api.flutter.dev/flutter/material/Colors-class.html)
-
-- **alignment**	 Position of image predefined in Flutter library based on [Alignment constant](https://api.flutter.dev/flutter/painting/Alignment-class.html#constants)
-
-- **timeAfterResume (Android only)**: A small amount of time (in milliseconds) for the view to disappear before jumping back to the main application view.
-
-- **top**  Top position of the image
-
-- **left** Left position of the image
-
-- **bottom**	Bottom of the image
-
-- **right**	Right of the image
-
-<blockquote>
-`alignment` can't be combined with position(top, left, bottom, right) params cause this will always be checked 1st, and all positions will be skipped if not null.
-
-Set `alignment` to null if you want to custom your own position with one of position param `top`, `left`, `bottom` or `right` above.
-</blockquote>
-
-### registerWithoutEffect
-
-(Android only) Activate screenguard without any effect above for Android only.
-
-### registerScreenShotEventListener
-
-Activate a screenshot detector and receive an event callback with screenshot information (if allowed) after a screenshot has been triggered successfully.
+Activate screen protection **without any visual overlay**. *(Android only)*
 
 ```dart
-import 'package:flutter_screenguard/flutter_screenguard_screenshot_event.dart';
+await _screenguard.registerWithoutEffect();
 ```
 
-then, create an instance of `FlutterScreenguardScreenshotEvent` as such 
+---
+
+### `unregister`
+
+Deactivate all screen protection and clean up.
 
 ```dart
-import 'package:flutter_screenguard/flutter_screenguard.dart';
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-
-  late final FlutterScreenguardScreenshotEvent
-      _flutterScreenguardScreenshotListener;
-  
-  @override
-  void initState() {
-    super.initState();
-    _flutterScreenguardScreenshotListener =
-        FlutterScreenguardScreenshotEvent(getScreenshotData: false)
-          ..initialize();
-  }
-}
-```
-then use as such 
-
-```dart
-
-  _flutterScreenguardScreenshotListener.addListener(
-    () {
-      FileCaptureDetail? data =
-          _flutterScreenguardScreenshotListener.value;
-      debugPrint(
-        'path: ${data?.path}',
-      );
-      debugPrint(
-        'name: ${data?.name}',
-      );
-      debugPrint(
-        'type: ${data?.type}',
-      );
-    },
-  );
+await _screenguard.unregister();
 ```
 
+---
 
-If true, callback will return a `FileCaptureDetail` object containing info of the previous image screenshot.
+### `onScreenshotCaptured`
 
-If false, callback will return null.
-
-### registerRecordingEventListener
-
-(iOS only) Activate a screen recording detector and receive an event callback after a record has done.
+A `Stream<Map<String, dynamic>>` that emits events when a screenshot is captured.
 
 ```dart
-import 'package:flutter_screenguard/flutter_screenguard_screen_record_event.dart';
+_screenguard.onScreenshotCaptured.listen((event) {
+  debugPrint('Screenshot: $event');
+  // event may contain: path, name, type (if getScreenshotPath is enabled)
+});
 ```
 
-then, create an instance of `FlutterScreenguardScreenshotEvent` as such 
+---
+
+### `onScreenRecordingCaptured`
+
+A `Stream<Map<String, dynamic>>` that emits events when screen recording starts or stops.
 
 ```dart
-import 'package:flutter_screenguard/flutter_screenguard.dart';
+_screenguard.onScreenRecordingCaptured.listen((event) {
+  final isRecording = event['isRecording'] as bool;
+  debugPrint('Recording: $isRecording');
+});
+```
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+| Key | Type | Description |
+|-----|------|-------------|
+| `isRecording` | `bool` | `true` = recording started, `false` = recording stopped |
+| `activationStatus` | `Map` | Contains `method` (String) and `isActivated` (bool) |
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
+---
 
-class _MyAppState extends State<MyApp> {
+### `getScreenGuardLogs`
 
-  late final FlutterScreenguardScreenRecordingEvent
-      _flutterScreenguardScreenRecordingListener;
-  
-  @override
-  void initState() {
-    super.initState();
-    _flutterScreenguardScreenRecordingEvent =
-        FlutterScreenguardScreenRecordingEvent()
-          ..initialize();
-  }
+Retrieve stored event logs from native storage. Requires `trackingLog: true` in `initSettings`.
+
+```dart
+final logs = await _screenguard.getScreenGuardLogs(maxCount: 50);
+for (final log in logs) {
+  debugPrint('Log: $log');
 }
 ```
-then use as such 
 
-```dart
-  _flutterScreenguardScreenRecordingEvent.addListener(
-    () {
-      debugPrint(
-        'screen is recording!',
-      );
-    },
-  );
-```
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `maxCount` | `int` | ✅ | Maximum number of log entries to retrieve |
 
-### unregister
+---
 
-deactivate the screenguard 
-
-```dart
-  await _flutterScreenguardPlugin.unregister();
-```
-
-## Testing
+## 🧪 Testing
 
 ### iOS Simulator
-- If you want to test on iOS simulator, open Simulator, on the top screen, navigate to Device -> Trigger Screenshot. This is applied to iOS 14+.
+
+Navigate to **Device → Trigger Screenshot** in the Simulator menu (iOS 14+).
 
 ### Android Emulator
-- If you want to test on Android Emulator, you can create an emulator with Google Play Service API supported. Then go to Play Store and download any third-party screen record and screenshot app based on your need (XRecorder, AZ, etc....) for testing.
 
-- Android 12+ emulator already provided screenshot and screen record function in Quick Settings Panel.
+- Use an emulator with **Google Play Services** and install a third-party screenshot/recording app (e.g., XRecorder, AZ Screen Recorder).
+- Android 12+ emulators have built-in screenshot and screen recording in the **Quick Settings Panel**.
 
+---
 
-## Limitation
+## ⚡ Limitations
 
-- This library support blocking screenshot for iOS 13+, Android 8+ only.
+| Limitation | Details |
+|------------|---------|
+| **Minimum OS** | Screenshot blocking requires **iOS 13+** / **Android 8+** |
+| **Single registration** | Call only **one** `register*` method at a time. Call `unregister()` before switching |
 
-- Remember to call a function only ONCE and don't combine with other register functions for limitting errors and unexpected problems might happened during testing.
+---
 
-- Please remember that text input will be temporary disabled until calling unregister on Android except registerWithoutEffect. Still working to find a solution.
+## 📄 License
+
+MIT License © 2024 [Goosebump](https://github.com/gbumps)
+
+See [LICENSE](LICENSE) for details.
