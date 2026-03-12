@@ -13,6 +13,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 
 import com.screenguard.flutter_screenguard.helper.ScreenGuardHelper;
@@ -20,6 +22,15 @@ import com.screenguard.flutter_screenguard.model.ScreenGuardBlurData;
 import com.screenguard.flutter_screenguard.model.ScreenGuardColorData;
 import com.screenguard.flutter_screenguard.model.ScreenGuardImageData;
 
+import android.content.SharedPreferences;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -43,7 +54,6 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
   private MethodChannel screenRecordingChannel;
 
   private ScreenGuardListener mScreenGuardScreenshotListener;
-  private ScreenGuardListener mScreenGuardScreenRecordingListener;
 
   private FlutterPluginBinding binding;
   private Activity currentActivity;
@@ -51,17 +61,25 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
   private Context currentContext;
   private static Handler mHandlerBlockScreenShot = new Handler(Looper.getMainLooper());
 
-  public static final String REGISTER = "register";
-  public static final String REGISTER_BLUR_VIEW = "registerWithBlurView";
-  public static final String REGISTER_IMAGE_VIEW = "registerWithImage";
-  public static final String REGISTER_WITHOUT_EFFECT = "registerWithoutEffect";
+  public static final String ACTIVATE_SHIELD = "activateShield";
+  public static final String ACTIVATE_SHIELD_BLUR = "activateShieldWithBlurView";
+  public static final String ACTIVATE_SHIELD_IMAGE = "activateShieldWithImage";
+  public static final String ACTIVATE_SHIELD_NO_EFFECT = "activateShieldWithoutEffect";
   public static final String REGISTER_SCREENSHOT_EVT = "registerScreenshotEventListener";
   public static final String REGISTER_SCREEN_RECORD_EVT = "registerScreenRecordingEventListener";
-  public static final String UNREGISTER = "unregister";
+  public static final String DEACTIVATE_SHIELD = "deactivateShield";
   public static final String ON_SCREEN_RECORDING_EVT = "onScreenRecordingCaptured";
   public static final String UNREGISTER_SCREEN_RECORDING_EVT = "unregisterScreenRecordingEventListener";
   public static final String ON_SCREENSHOT_EVT = "onScreenshotCaptured";
   public static final String UNREGISTER_SCREENSHOT_EVT = "unregisterScreenshotEventListener";
+  public static final String GET_SCREENGUARD_LOGS = "getScreenGuardLogs";
+  public static final String INIT_SETTINGS = "initSettings";
+
+  private Map<String, Object> mConfigs;
+  private int mCurrentScreenshotCount = 0;
+
+  private static final String PREFS_NAME = "screenguard_prefs";
+  private static final String PREF_LOGS = "screenguard_logs";
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -69,11 +87,11 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
     channel.setMethodCallHandler(this);
 
     screenshotChannel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(),
-            "flutter_screenguard_screenshot_event");
+        "flutter_screenguard_screenshot_event");
     screenshotChannel.setMethodCallHandler(this);
 
     screenRecordingChannel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(),
-            "flutter_screenguard_screen_recording_event");
+        "flutter_screenguard_screen_recording_event");
     screenRecordingChannel.setMethodCallHandler(this);
     binding = flutterPluginBinding;
 
@@ -83,7 +101,8 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
 
     application.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
       @Override
-      public void onActivityCreated(Activity activity, Bundle savedInstanceState) { }
+      public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+      }
 
       @Override
       public void onActivityStarted(Activity activity) {
@@ -96,13 +115,18 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
       }
 
       @Override
-      public void onActivityPaused(Activity activity) { }
+      public void onActivityPaused(Activity activity) {
+        // Show overlay when app goes to background
+        ScreenGuardOverlay.getInstance().showPendingOverlay();
+      }
 
       @Override
-      public void onActivityStopped(Activity activity) { }
+      public void onActivityStopped(Activity activity) {
+      }
 
       @Override
-      public void onActivitySaveInstanceState(Activity activity, Bundle outState) { }
+      public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+      }
 
       @Override
       public void onActivityDestroyed(Activity activity) {
@@ -116,97 +140,62 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
     String method = call.method;
-    int timeAfterResume;
     switch (method) {
-      case REGISTER:
-        String color = (String)
-                ScreenGuardHelper.getData(call,"color");
-        timeAfterResume = Integer.parseInt(
-                Objects.requireNonNull(ScreenGuardHelper.getData(call, "timeAfterResume")).toString());
+      case ACTIVATE_SHIELD:
+        String color = (String) ScreenGuardHelper.getData(call, "color");
+        int timeAfterResume = getTimeAfterResume();
         if (color != null) {
           currentActivity.runOnUiThread(() -> {
             ScreenGuardColorData data = new ScreenGuardColorData(
-                    color,
-                    timeAfterResume
-            );
+                color,
+                timeAfterResume);
             activateShield(data);
           });
         }
-        result.success(FlutterScreenguardPlugin.class + ":" + REGISTER + " success");
+        result.success(FlutterScreenguardPlugin.class + ":" + ACTIVATE_SHIELD + " success");
         break;
-      case REGISTER_BLUR_VIEW:
+      case ACTIVATE_SHIELD_BLUR:
         int radius = Integer.parseInt(Objects.requireNonNull(ScreenGuardHelper.getData(call, "radius")).toString());
-        timeAfterResume = Integer.parseInt(
-                Objects.requireNonNull(ScreenGuardHelper.getData(call, "timeAfterResume")).toString());
+        int blurTimeAfterResume = getTimeAfterResume();
         currentActivity.runOnUiThread(() -> {
           String localPath = Objects.requireNonNull(ScreenGuardHelper.getData(call, "localImagePath")).toString();
-            ScreenGuardBlurData data = new ScreenGuardBlurData(
-                    radius,
-                    localPath,
-                    timeAfterResume
-            );
-            activateShieldWithBlurView(data);
+          ScreenGuardBlurData data = new ScreenGuardBlurData(
+              radius,
+              localPath,
+              blurTimeAfterResume);
+          activateShieldWithBlurView(data);
         });
-
-        result.success(FlutterScreenguardPlugin.class + ":" + REGISTER_BLUR_VIEW + " success");
+        result.success(FlutterScreenguardPlugin.class + ":" + ACTIVATE_SHIELD_BLUR + " success");
         break;
-      case REGISTER_IMAGE_VIEW:
-        timeAfterResume = Integer.parseInt(
-                Objects.requireNonNull(ScreenGuardHelper.getData(call, "timeAfterResume")).toString());
-
-        String uri = (String)
-                ScreenGuardHelper.getData(call,"uri");
-        color = (String)
-                ScreenGuardHelper.getData(call,"color");
+      case ACTIVATE_SHIELD_IMAGE:
+        int imageTimeAfterResume = getTimeAfterResume();
+        String uri = (String) ScreenGuardHelper.getData(call, "uri");
+        color = (String) ScreenGuardHelper.getData(call, "color");
         double height = Double.parseDouble(
-                Objects.requireNonNull(ScreenGuardHelper.getData(call, "height")).toString()
-        );
+            Objects.requireNonNull(ScreenGuardHelper.getData(call, "height")).toString());
         double width = Double.parseDouble(
-                Objects.requireNonNull(ScreenGuardHelper.getData(call, "width")).toString()
-        );
-
+            Objects.requireNonNull(ScreenGuardHelper.getData(call, "width")).toString());
         int alignmentIndex = Integer.parseInt(
-                Objects.requireNonNull(ScreenGuardHelper.getData(call, "alignment")).toString());
-
+            Objects.requireNonNull(ScreenGuardHelper.getData(call, "alignment")).toString());
         currentActivity.runOnUiThread(() -> {
-            ScreenGuardImageData  data = new ScreenGuardImageData(
-                    color,
-                    uri,
-                    width,
-                    height,
-                    alignmentIndex,
-                    timeAfterResume
-            );
-            activateShieldWithImage(data);
+          ScreenGuardImageData data = new ScreenGuardImageData(
+              color,
+              uri,
+              width,
+              height,
+              alignmentIndex,
+              imageTimeAfterResume);
+          activateShieldWithImage(data);
         });
-        result.success(FlutterScreenguardPlugin.class + ":" + REGISTER_IMAGE_VIEW + " success");
+        result.success(FlutterScreenguardPlugin.class + ":" + ACTIVATE_SHIELD_IMAGE + " success");
         break;
-      case REGISTER_WITHOUT_EFFECT:
+      case ACTIVATE_SHIELD_NO_EFFECT:
         activateShieldWithoutEffect();
-        result.success(FlutterScreenguardPlugin.class + ":" + REGISTER_WITHOUT_EFFECT + " success");
+        result.success(FlutterScreenguardPlugin.class + ":" + ACTIVATE_SHIELD_NO_EFFECT + " success");
         break;
-      case REGISTER_SCREEN_RECORD_EVT:
-        result.success(FlutterScreenguardPlugin.class + ":" + REGISTER_SCREEN_RECORD_EVT + " success");
-        break;
-      case UNREGISTER:
+      case DEACTIVATE_SHIELD:
         deactivateShield();
-        result.success(FlutterScreenguardPlugin.class + ":" + UNREGISTER + " success");
-        break;
-      case UNREGISTER_SCREEN_RECORDING_EVT:
-        if (mScreenGuardScreenRecordingListener != null) {
-          mScreenGuardScreenRecordingListener.unregister();
-          mScreenGuardScreenRecordingListener = null;
-        }
-
-        result.success("deactivate screen recording success");
-        break;
-      case REGISTER_SCREENSHOT_EVT:
-        boolean isCaptureScreenshot =
-                Boolean.parseBoolean(
-                        Objects.requireNonNull(ScreenGuardHelper.getData(call,"getScreenshotData")).toString()
-                );
-        registerScreenShotEventListener(isCaptureScreenshot);
-        result.success(FlutterScreenguardPlugin.class + ":" + REGISTER_SCREENSHOT_EVT + " success");
+        result.success(FlutterScreenguardPlugin.class + ":" + DEACTIVATE_SHIELD + " success");
         break;
       case UNREGISTER_SCREENSHOT_EVT:
         if (mScreenGuardScreenshotListener != null) {
@@ -215,28 +204,186 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
         }
         result.success("deactivate screenshot success");
         break;
+      case GET_SCREENGUARD_LOGS:
+        double maxCount = Double.parseDouble(
+            Objects.requireNonNull(ScreenGuardHelper.getData(call, "maxCount")).toString());
+        getScreenGuardLogs(maxCount, result);
+        break;
+      case INIT_SETTINGS:
+        initSettings(call.arguments(), result);
+        break;
     }
   }
-  private void registerScreenRecordingEventListener() {
-    if (mScreenGuardScreenRecordingListener == null) {
-      mScreenGuardScreenRecordingListener  =
-              new ScreenGuardListener(currentContext, false, currentActivity, map -> {
-                screenRecordingChannel.invokeMethod(ON_SCREEN_RECORDING_EVT, map);
-              });
+
+  private int getTimeAfterResume() {
+    if (mConfigs != null && mConfigs.containsKey("timeAfterResume")) {
+      return ((Number) mConfigs.get("timeAfterResume")).intValue();
     }
-    mScreenGuardScreenRecordingListener.register();
+    return 1000; // default
+  }
+
+  private void initSettings(Object arguments, Result result) {
+    if (!(arguments instanceof Map)) {
+      result.error("INVALID_ARGUMENTS", "Arguments must be a Map", null);
+      return;
+    }
+    mConfigs = (Map<String, Object>) arguments;
+
+    if (currentActivity != null) {
+      boolean enableCapture = mConfigs.containsKey("enableCapture") && (boolean) mConfigs.get("enableCapture");
+      boolean enableRecord = mConfigs.containsKey("enableRecord") && (boolean) mConfigs.get("enableRecord");
+      boolean getScreenshotPath = mConfigs.containsKey("getScreenshotPath")
+          && (boolean) mConfigs.get("getScreenshotPath");
+
+      boolean displayScreenguardOverlayAndroid = true;
+      if (mConfigs.containsKey("displayScreenguardOverlayAndroid")) {
+        displayScreenguardOverlayAndroid = (boolean) mConfigs.get("displayScreenguardOverlayAndroid");
+      }
+      ScreenGuardOverlay.getInstance().setEnabled(displayScreenguardOverlayAndroid);
+
+      currentActivity.runOnUiThread(() -> {
+        if (enableCapture || enableRecord) {
+          currentActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        } else {
+          currentActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        }
+      });
+
+      registerScreenShotEventListener(getScreenshotPath);
+
+      if (Build.VERSION.SDK_INT >= 35) {
+        registerScreenRecordingCallback();
+      }
+    }
+    logAction("init", false);
+    result.success(null);
+  }
+
+  private void registerScreenRecordingCallback() {
+    if (Build.VERSION.SDK_INT >= 35) {
+      if (currentActivity != null) {
+        currentActivity.getWindowManager().addScreenRecordingCallback(currentActivity
+            .getMainExecutor(), state -> {
+              boolean isRecording = state > 0;
+              Map<String, Object> map = new HashMap<>();
+              map.put("isRecording", isRecording);
+              Map<String, Object> activationStatus = new HashMap<>();
+              activationStatus.put("method", getCurrentMethod());
+              activationStatus.put("isActivated", ScreenGuardOverlay.getInstance().isActivated());
+              map.put("activationStatus", activationStatus);
+              screenRecordingChannel.invokeMethod(ON_SCREEN_RECORDING_EVT, map);
+              logAction(isRecording ? "recording_start" : "recording_stop", true);
+            });
+      }
+    }
+  }
+
+  private void logAction(String action, boolean isProtected) {
+    if (mConfigs != null && mConfigs.containsKey("trackingLog") && !((boolean) mConfigs.get("trackingLog"))) {
+      return;
+    }
+
+    try {
+      SharedPreferences shardPref = currentContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+      String logsStr = shardPref.getString(PREF_LOGS, "[]");
+      JSONArray logs = new JSONArray(logsStr);
+
+      JSONObject logEntry = new JSONObject();
+      logEntry.put("timestamp", System.currentTimeMillis());
+      logEntry.put("action", action);
+      logEntry.put("isProtected", isProtected);
+      logEntry.put("method", "");
+
+      logs.put(logEntry);
+
+      // Limit to last 1000 logs
+      if (logs.length() > 1000) {
+        JSONArray newLogs = new JSONArray();
+        for (int i = logs.length() - 1000; i < logs.length(); i++) {
+          newLogs.put(logs.get(i));
+        }
+        logs = newLogs;
+      }
+
+      shardPref.edit().putString(PREF_LOGS, logs.toString()).apply();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void getScreenGuardLogs(double maxCount, Result result) {
+    try {
+      SharedPreferences shardPref = currentContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+      String logsStr = shardPref.getString(PREF_LOGS, "[]");
+      JSONArray logs = new JSONArray(logsStr);
+
+      int count = (int) maxCount;
+      if (count > logs.length()) {
+        count = logs.length();
+      }
+
+      List<Map<String, Object>> resultList = new ArrayList<>();
+      int startIndex = Math.max(0, logs.length() - count);
+
+      for (int i = startIndex; i < logs.length(); i++) {
+        JSONObject log = logs.getJSONObject(i);
+        Map<String, Object> map = new HashMap<>();
+        if (log.has("timestamp"))
+          map.put("timestamp", log.getDouble("timestamp"));
+        if (log.has("action"))
+          map.put("action", log.getString("action"));
+        if (log.has("isProtected"))
+          map.put("isProtected", log.getBoolean("isProtected"));
+        if (log.has("method"))
+          map.put("method", log.getString("method"));
+        resultList.add(map);
+      }
+      result.success(resultList);
+    } catch (Exception e) {
+      result.error("GET_LOGS_ERROR", e.getMessage(), null);
+    }
+  }
+
+  private String getCurrentMethod() {
+    ScreenGuardOverlay.OverlayType type = ScreenGuardOverlay.getInstance().getPendingType();
+    switch (type) {
+      case BLUR:
+        return "blur";
+      case IMAGE:
+        return "image";
+      case COLOR:
+        return "color";
+      default:
+        return "";
+    }
   }
 
   private void registerScreenShotEventListener(boolean isCaptureScreenshotFile) {
     if (mScreenGuardScreenshotListener == null) {
-      mScreenGuardScreenshotListener =
-              new ScreenGuardListener(currentContext, isCaptureScreenshotFile, currentActivity, map -> {
-                screenshotChannel.invokeMethod(ON_SCREENSHOT_EVT, map);
-              });
+      mScreenGuardScreenshotListener = new ScreenGuardListener(currentContext, isCaptureScreenshotFile, currentActivity,
+          map -> {
+            int limitCount = 0;
+            if (mConfigs != null && mConfigs.containsKey("limitCaptureEvtCount")) {
+              limitCount = ((Number) mConfigs.get("limitCaptureEvtCount")).intValue();
+            }
+
+            if (limitCount > 0 && mCurrentScreenshotCount >= limitCount) {
+              return;
+            }
+
+            mCurrentScreenshotCount++;
+            logAction("screenshot_taken", true);
+
+            Map<String, Object> activationStatus = new HashMap<>();
+            activationStatus.put("method", getCurrentMethod());
+            activationStatus.put("isActivated", ScreenGuardOverlay.getInstance().isActivated());
+            map.put("activationStatus", activationStatus);
+
+            screenshotChannel.invokeMethod(ON_SCREENSHOT_EVT, map);
+          });
     }
     mScreenGuardScreenshotListener.register();
   }
-
 
   private void activateShieldWithBlurView(ScreenGuardBlurData data) {
     try {
@@ -246,23 +393,27 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
       if (currentContext == null) {
         currentContext = binding.getApplicationContext();
       }
-
-      if (currentActivity.getClass() == ScreenGuardColorActivity.class) {
-        deactivateShield();
+      if (currentActivity == null) {
+        return;
       }
+
+      ScreenGuardOverlay.getInstance().hide();
+
       mHandlerBlockScreenShot.post(() -> currentActivity.getWindow().setFlags(
           WindowManager.LayoutParams.FLAG_SECURE,
           WindowManager.LayoutParams.FLAG_SECURE));
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        Intent intent = new Intent(
-            currentActivity,
-            ScreenGuardColorActivity.class);
-        intent.putExtra(ScreenGuardBlurData.class.getName(), data);
-        currentActivity.startActivity(intent);
 
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        Bitmap bitmap = ScreenGuardHelper.loadBitmapFromPath(data.bitmapPath);
+        ScreenGuardOverlay.getInstance().prepareBlur(
+            currentActivity,
+            bitmap,
+            data.radius,
+            data.timeAfterResume);
+        logAction("activate_blur", true);
       }
     } catch (Exception e) {
-      Log.e(REGISTER_BLUR_VIEW, e.getMessage());
+      Log.e("activateShieldWithView", e.getMessage() != null ? e.getMessage() : "Unknown error");
     }
   }
 
@@ -271,9 +422,10 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
       if (mHandlerBlockScreenShot == null) {
         mHandlerBlockScreenShot = new Handler(Looper.getMainLooper());
       }
-        mHandlerBlockScreenShot.post(() -> currentActivity.getWindow().setFlags(
-            WindowManager.LayoutParams.FLAG_SECURE,
-            WindowManager.LayoutParams.FLAG_SECURE));
+      mHandlerBlockScreenShot.post(() -> currentActivity.getWindow().setFlags(
+          WindowManager.LayoutParams.FLAG_SECURE,
+          WindowManager.LayoutParams.FLAG_SECURE));
+      logAction("activate_no_effect", true);
     } catch (Exception e) {
       Log.e(REGISTER_WITHOUT_EFFECT, e.getMessage());
     }
@@ -285,22 +437,19 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
         mHandlerBlockScreenShot = new Handler(Looper.getMainLooper());
       }
       if (currentActivity == null) {
-          throw new NullPointerException("Current Activity is null!");
+        throw new NullPointerException("Current Activity is null!");
       }
-        mHandlerBlockScreenShot.postDelayed(() -> currentActivity
-                .getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE), 400);
 
-        mHandlerBlockScreenShot = null;
-      if (Build.VERSION.SDK_INT >= 33) {
-        if (currentActivity instanceof ScreenGuardColorActivity) {
-          currentActivity.finish();
-        }
-      } else {
-        currentContext.sendBroadcast(
-          new Intent(ScreenGuardColorActivity.SCREENGUARD_COLOR_ACTIVITY_CLOSE));
-      }
+      // Hide overlay
+      ScreenGuardOverlay.getInstance().hide();
+
+      mHandlerBlockScreenShot.postDelayed(() -> currentActivity
+          .getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE), 400);
+
+      mHandlerBlockScreenShot = null;
+      logAction("deactivate", false);
     } catch (Exception e) {
-      Log.e(UNREGISTER, e.getMessage());
+      Log.e("deactivateShield", e.getMessage() != null ? e.getMessage() : "Unknown error");
     }
   }
 
@@ -312,23 +461,22 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
       if (currentActivity == null) {
         return;
       }
+
       mHandlerBlockScreenShot.post(() -> currentActivity.getWindow().setFlags(
           WindowManager.LayoutParams.FLAG_SECURE,
           WindowManager.LayoutParams.FLAG_SECURE));
+
       currentActivity.runOnUiThread(() -> {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-          Intent intent = new Intent(
+          ScreenGuardOverlay.getInstance().prepareColor(
               currentActivity,
-              ScreenGuardColorActivity.class);
-          intent.putExtra(ScreenGuardColorData.class.getName(), data);
-
-          intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-
-          currentActivity.startActivity(intent);
+              data.backgroundColor,
+              data.timeAfterResume);
+          logAction("activate_color", true);
         }
       });
     } catch (Exception e) {
-      Log.e(REGISTER, e.getMessage());
+      Log.e("activateShield", e.getMessage() != null ? e.getMessage() : "Unknown error");
     }
   }
 
@@ -341,30 +489,37 @@ public class FlutterScreenguardPlugin implements FlutterPlugin, MethodCallHandle
       if (currentActivity == null) {
         return;
       }
-      if (currentActivity.getClass() == ScreenGuardColorActivity.class) {
-        deactivateShield();
-      }
+
+      ScreenGuardOverlay.getInstance().hide();
+
       mHandlerBlockScreenShot.post(() -> currentActivity.getWindow().setFlags(
           WindowManager.LayoutParams.FLAG_SECURE,
           WindowManager.LayoutParams.FLAG_SECURE));
+
       currentActivity.runOnUiThread(() -> {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-          Intent intent = new Intent(
+          int alignmentIndex = 4; // center default
+          if (data.position != null) {
+            alignmentIndex = data.position.ordinal();
+          }
+          ScreenGuardOverlay.getInstance().prepareImage(
               currentActivity,
-              ScreenGuardColorActivity.class);
-
-          intent.putExtra(ScreenGuardImageData.class.getName(), data);
-          currentActivity.startActivity(intent);
+              data.imageUrl,
+              data.width,
+              data.height,
+              alignmentIndex,
+              data.backgroundColor,
+              data.timeAfterResume);
+          logAction("activate_image", true);
         }
       });
     } catch (Exception e) {
-      Log.e(REGISTER_IMAGE_VIEW, e.getMessage());
+      Log.e("activateShieldWithImage", e.getMessage() != null ? e.getMessage() : "Unknown error");
     }
   }
 
   private void registerRecordingEvent() {
   }
-
 
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {

@@ -12,6 +12,7 @@ import android.view.View;
 import com.screenguard.flutter_screenguard.helper.ScreenGuardHelper;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -52,7 +53,7 @@ public class ScreenGuardObserver extends ContentObserver {
     public void onChange(boolean selfChange, Uri uri) {
         super.onChange(selfChange, uri);
         try {
-            Map<String, Object> map = Collections.emptyMap();
+            Map<String, Object> map = new HashMap<>();
             if (mCurrentActivity!= null && getScreenShotPath) {
                 final View currentView =
                         mCurrentActivity.getWindow().getDecorView().getRootView();
