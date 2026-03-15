@@ -1,3 +1,7 @@
+## 2.0.1
+
+Republished due to video demo README not loading correctly.
+
 ## 2.0.0
 
 - New initSettings() API - Required initialization before using any other API
